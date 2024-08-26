@@ -52,7 +52,7 @@ impl Tile {
     pub fn color(&self) -> Option<Color> {
         let color_map = get_color_map();
         match self {
-            Tile::Wall => Some(color_map.get(&TolColor::VibOrange).unwrap().clone()),
+            Tile::Wall => Some(color_map.get(&TolColor::VibTeal).unwrap().clone()),
             Tile::Goal => Some(color_map.get(&TolColor::VibRed).unwrap().clone()),
             Tile::Empty => Some(Color::Rgb(41, 19, 10)),
         }

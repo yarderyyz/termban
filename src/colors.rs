@@ -1,3 +1,20 @@
+/*!
+ * Author: Lee Gauthier
+ *
+ * Description:
+ *
+ * Implementation of Paul Tol's color palettes, as presented in
+ *
+ *   https://personal.sron.nl/~pault/data/colourschemes.pdf
+ *
+ * Inspired by the implementation from https://gist.github.com/gipert/df72b67c1d02bbb41f1dd406b6397811
+ *
+ * Usage:
+ *
+ * Notes:
+ *
+ */
+
 use ratatui::style::Color;
 use std::collections::HashMap;
 use std::sync::OnceLock;

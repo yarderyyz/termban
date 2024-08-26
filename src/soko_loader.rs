@@ -19,7 +19,6 @@
  * a newline and starting with a level identifier.
  */
 
-use ratatui::style::Color;
 use ndarray::Array2;
 use crate::types::{
     Tile,
@@ -93,7 +92,7 @@ fn get_board_dimensions(tokens: &[Token]) -> (usize, usize) {
 pub fn load_level(contents: &str) -> Result<Level, String> {
     let color_map = get_color_map();
     let chest_color = color_map.get(&TolColor::VibMagenta).unwrap();
-    let player_color = color_map.get(&TolColor::VibBlue).unwrap();
+    let player_color = color_map.get(&TolColor::VibOrange).unwrap();
 
     let tokens = tokenize(contents);
     if tokens.is_none() {
