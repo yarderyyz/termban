@@ -12,6 +12,7 @@ use ratatui::{
     Frame, Terminal,
 };
 use ratatui::{buffer::Buffer, layout::Rect, style::Color, widgets::Widget};
+use ratatui::{prelude::*, widgets::*};
 
 use std::fs::File;
 use std::io::{self, stdout, Read};
@@ -31,36 +32,50 @@ type Tokens = Vec<Token>;
 
 #[derive(Debug)]
 #[derive(Clone)]
-enum Entity {
+enum Tile {
     Empty,
     Wall,
     Goal
 }
 
+#[derive(Debug)]
+#[derive(Clone)]
 struct Coordinates {
     x: usize,
     y: usize
 }
 
+#[derive(Debug)]
+#[derive(Clone)]
 struct Player {
     coords: Coordinates,
 }
 
+#[derive(Debug)]
+#[derive(Clone)]
 struct Box {
     coords: Coordinates,
 }
 
 #[derive(Debug)]
+#[derive(Clone)]
+enum Entity {
+    Player(Player),
+    Box(Box)
+}
+
+#[derive(Debug)]
 struct Level {
     name: String,
-    board: Array2<Entity>
+    map: Array2<Tile>,
+    entities: Vec<Entity>
 }
 
 impl Widget for Level {
     #[allow(clippy::cast_precision_loss, clippy::similar_names)]
-    fn render(self, _area: Rect, buf: &mut Buffer) {
+    fn render(self, area: Rect, buf: &mut Buffer) {
         let mut row_pixels;
-        let mut row_iter = self.board.outer_iter();
+        let mut row_iter = self.map.outer_iter();
         let mut yi: usize = 0;
         while let Some(row_top) = row_iter.next() {
             let maybe_row_bottom = row_iter.next();
@@ -81,7 +96,7 @@ impl Widget for Level {
             }
 
             for (xi, (fg, bg)) in row_pixels.enumerate() {
-                let curs = &mut buf[(xi as u16, yi as u16)];
+                let curs = &mut buf[(xi as u16 + area.x , yi as u16 + area.y)];
                 curs.set_char('▀');
                 if let Some(fg) = fg {
                     curs.set_fg(fg.clone());
@@ -93,6 +108,32 @@ impl Widget for Level {
 
             yi += 1;
         }
+        for entity in self.entities {
+            match entity {
+                Entity::Player(player) => {
+                    let px_x = player.coords.x;
+                    let px_y = player.coords.y / 2;
+                    let curs = &mut buf[(px_x as u16 + area.x , px_y as u16 + area.y)];
+                    let color = Color::Rgb(0, 0, 255);
+                    if px_y % 2 == 0 {
+                        curs.set_fg(color);
+                    } else {
+                        curs.set_bg(color);
+                    }
+                }
+                Entity::Box(b) => {
+                    let px_x = b.coords.x;
+                    let px_y = b.coords.y / 2;
+                    let curs = &mut buf[(px_x as u16 + area.x , px_y as u16 + area.y)];
+                    let color = Color::Rgb(255, 0, 255);
+                    if px_y % 2 == 0 {
+                        curs.set_fg(color);
+                    } else {
+                        curs.set_bg(color);
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -103,22 +144,22 @@ pub fn color_from_oklab(hue: f32, saturation: f32, value: f32) -> Color {
 }
 
 
-impl Entity {
+impl Tile {
     fn color(&self) -> Option<Color> {
         match self {
-            Entity::Wall => Some(Color::Rgb(65, 117, 0)),
-            Entity::Goal => Some(Color::Rgb(230, 69, 0)),
-            Entity::Empty => Some(Color::Rgb(41, 19, 10)),
+            Tile::Wall => Some(Color::Rgb(65, 117, 0)),
+            Tile::Goal => Some(Color::Rgb(230, 69, 0)),
+            Tile::Empty => Some(Color::Rgb(41, 19, 10)),
         }
     }
 }
 
-impl fmt::Display for Entity {
+impl fmt::Display for Tile {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Entity::Wall => write!(f, "#"),
-            Entity::Empty => write!(f, " "),
-            Entity::Goal => write!(f, "."),
+            Tile::Wall => write!(f, "#"),
+            Tile::Empty => write!(f, " "),
+            Tile::Goal => write!(f, "."),
         }
     }
 }
@@ -126,7 +167,7 @@ impl fmt::Display for Entity {
 impl fmt::Display for Level {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         writeln!(f)?;
-        for row in self.board.rows() {
+        for row in self.map.rows() {
             for entity in row {
                 write!(f, "{}", entity)?;
             }
@@ -204,22 +245,47 @@ fn load_level(contents: &str) -> Option<Level> {
             let (rows, cols)= get_board_dimensions(level_toks);
 
             // Create an initial board with default values (e.g., all `Wall`)
-            let mut initial_board = Array2::from_elem((cols, rows), Entity::Empty);
+            let mut map = Array2::from_elem((cols, rows), Tile::Empty);
+            let mut entities = Vec::new();
 
             let (mut col, mut row): (usize, usize) = (0,0);
             for tok in level_toks.iter() {
                 match tok {
                     Token::Entity('#') => {
-                        initial_board[[row, col]] = Entity::Wall
+                        map[[row, col]] = Tile::Wall;
+                    }
+                    Token::Entity('@') => {
+                        entities.push(Entity::Player(Player {
+                            coords: Coordinates {
+                                x: col, y: row
+                            }
+                        }));
                     }
                     Token::Entity('.') => {
-                        initial_board[[row, col]] = Entity::Goal
+                        map[[row, col]] = Tile::Goal;
                     }
                     Token::Entity('$') => {
-                        initial_board[[row, col]] = Entity::Goal
+                        entities.push(Entity::Box(Box {
+                            coords: Coordinates {
+                                x: col, y: row
+                            }
+                        }));
                     }
                     Token::Entity('*') => {
-                        initial_board[[row, col]] = Entity::Goal
+                        map[[row, col]] = Tile::Goal;
+                        entities.push(Entity::Box(Box {
+                            coords: Coordinates {
+                                x: col, y: row
+                            }
+                        }));
+                    }
+                    Token::Entity('+') => {
+                        map[[row, col]] = Tile::Goal;
+                        entities.push(Entity::Player(Player {
+                            coords: Coordinates {
+                                x: col, y: row
+                            }
+                        }));
                     }
                     Token::NewLine => {
                         row += 1;
@@ -234,7 +300,8 @@ fn load_level(contents: &str) -> Option<Level> {
             // Create an instance of Level
             let level = Level {
                 name: title.to_string(),
-                board: initial_board,
+                map,
+                entities,
             };
             return Some(level);
         },
@@ -242,31 +309,6 @@ fn load_level(contents: &str) -> Option<Level> {
             println!("Level must start with a title");
             return None;
         }
-        // ' ' => {
-        //     tokens.push(Token::Empty);
-        // }
-        // '#' => {
-        //     tokens.push(Token::Wall);
-        // }
-        // '@' => {
-        //     tokens.push(Token::Player);
-        // }
-        // '$' => {
-        //     tokens.push(Token::Box);
-        // }
-        // '.' => {
-        //     tokens.push(Token::Goal);
-        // }
-        // '*' => {
-        //     tokens.push(Token::BoxGoal);
-        // }
-        // '+' => {
-        //     tokens.push(Token::PlayerGoal);
-        // }
-        // ch => {
-        //     println!("Unsupported Tile: {}", ch);
-        //     tokens.push(Token::Empty);
-        // }
     }
 }
 
@@ -320,12 +362,13 @@ fn ui(frame: &mut Frame) {
 
     match maybe_level {
         Some(level) => {
-            frame.render_widget(
-                level,
-                frame.area(),
-            );
+            let area = frame.area();
+            let outer_block = Block::bordered().title(title);
+            let inner = outer_block.inner(area);
+
+            frame.render_widget(outer_block, area);
+            frame.render_widget(level, inner);
         },
         None => ()
     };
-
 }
