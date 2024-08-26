@@ -21,11 +21,24 @@ use std::fmt;
 
 static TILES: &str = " #@$.*+";
 
+enum Direction {
+    Left,
+    Right,
+    Up,
+    Down,
+}
+
+enum Action {
+    Quit,
+    Move(Direction),
+    None,
+}
+
 #[derive(Debug)]
 enum Token {
     Text(String),
     Entity(char),
-    NewLine
+    NewLine,
 }
 
 type Tokens = Vec<Token>;
@@ -41,20 +54,20 @@ enum Tile {
 #[derive(Debug)]
 #[derive(Clone)]
 struct Coordinates {
-    x: usize,
-    y: usize
+    pub x: usize,
+    pub y: usize
 }
 
 #[derive(Debug)]
 #[derive(Clone)]
 struct Player {
-    coords: Coordinates,
+    pub coords: Coordinates,
 }
 
 #[derive(Debug)]
 #[derive(Clone)]
 struct Chest {
-    coords: Coordinates,
+    pub coords: Coordinates,
 }
 
 #[derive(Debug)]
@@ -64,11 +77,11 @@ enum Entity {
     Chest(Chest)
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct Level {
-    name: String,
-    map: Array2<Tile>,
-    entities: Vec<Entity>
+    pub name: String,
+    pub map: Array2<Tile>,
+    pub entities: Vec<Entity>
 }
 
 impl Widget for Level {
@@ -232,11 +245,10 @@ fn tokenize(contents: &str) -> Option<Tokens> {
     Some(tokens)
 }
 
-fn load_level(contents: &str) -> Option<Level> {
+fn load_level(contents: &str) -> Result<Level, String> {
     let tokens = tokenize(contents);
     if tokens.is_none() {
-        println!("Level failed to load");
-        return None;
+        return Err("Level failed to load".to_string());
     }
     let tokens = tokens.unwrap();
     match tokens.as_slice() {
@@ -298,20 +310,18 @@ fn load_level(contents: &str) -> Option<Level> {
             }
 
             // Create an instance of Level
-            let level = Level {
+            let mut level = Level {
                 name: title.to_string(),
                 map,
                 entities,
             };
-            return Some(level);
+            return Ok(level);
         },
         _ => {
-            println!("Level must start with a title");
-            return None;
+            return Err("Level must start with a title".to_string());
         }
     }
 }
-
 
 
 fn main() -> io::Result<()> {
@@ -319,10 +329,42 @@ fn main() -> io::Result<()> {
     stdout().execute(EnterAlternateScreen)?;
     let mut terminal = Terminal::new(CrosstermBackend::new(stdout()))?;
 
-    let mut should_quit = false;
-    while !should_quit {
-        terminal.draw(ui)?;
-        should_quit = handle_events()?;
+    let filename = "./resources/levels/micro.ban";
+    // TODO: actually handle errors here
+    let mut level = read_file(filename)
+        .map(|contents| load_level(&contents).unwrap())
+        .unwrap();
+
+    let title = level.name.clone();
+
+    loop {
+        terminal.draw(|frame: &mut Frame| {
+            let area = frame.area();
+            let outer_block = Block::bordered().title(title.clone());
+            let inner = outer_block.inner(area);
+
+            frame.render_widget(outer_block, area);
+            frame.render_widget(level.clone(), inner);
+        })?;
+        match handle_events()? {
+            Action::Quit => {
+                break;
+            },
+            Action::Move(dir) => {
+                // Iterate over mutable references to entities
+                for entity in level.entities.iter_mut() {
+                    if let Entity::Player(player) = entity {
+                        match dir {
+                            Direction::Up => player.coords.y -= 1,
+                            Direction::Down => player.coords.y += 1,
+                            Direction::Left => player.coords.x -= 1,
+                            Direction:: Right => player.coords.x += 1,
+                        }
+                    }
+                }
+            }
+            Action::None => {}
+        }
     }
 
     disable_raw_mode()?;
@@ -330,45 +372,25 @@ fn main() -> io::Result<()> {
     Ok(())
 }
 
-fn handle_events() -> io::Result<bool> {
+fn handle_events() -> io::Result<Action> {
     if event::poll(std::time::Duration::from_millis(50))? {
         if let Event::Key(key) = event::read()? {
             if key.kind == event::KeyEventKind::Press && key.code == KeyCode::Char('q') {
-                return Ok(true);
+                return Ok(Action::Quit);
+            }
+            if key.kind == event::KeyEventKind::Press && key.code == KeyCode::Char('w') {
+                return Ok(Action::Move(Direction::Up));
+            }
+            if key.kind == event::KeyEventKind::Press && key.code == KeyCode::Char('s') {
+                return Ok(Action::Move(Direction::Down));
+            }
+            if key.kind == event::KeyEventKind::Press && key.code == KeyCode::Char('a') {
+                return Ok(Action::Move(Direction::Left));
+            }
+            if key.kind == event::KeyEventKind::Press && key.code == KeyCode::Char('d') {
+                return Ok(Action::Move(Direction::Right));
             }
         }
     }
-    Ok(false)
-}
-
-fn ui(frame: &mut Frame) {
-    let mut maybe_level = None;
-    let filename = "./resources/levels/micro.ban";
-    match read_file(filename) {
-        Ok(contents) => {
-            maybe_level = load_level(&contents);
-            ()
-        },
-        Err(e) => println!("Error reading file: {}", e),
-    }
-
-    let title = match &maybe_level {
-        Some(level) => {
-            level.name.clone()
-
-        },
-        None => {"Default".to_string()}
-    };
-
-    match maybe_level {
-        Some(level) => {
-            let area = frame.area();
-            let outer_block = Block::bordered().title(title);
-            let inner = outer_block.inner(area);
-
-            frame.render_widget(outer_block, area);
-            frame.render_widget(level, inner);
-        },
-        None => ()
-    };
+    Ok(Action::None)
 }
