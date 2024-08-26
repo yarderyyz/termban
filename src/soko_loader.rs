@@ -28,7 +28,7 @@ use crate::types::{
     Chest,
     Coordinates
 };
-use crate::colors::{TolColor, get_color_map};
+use crate::colors::{TolColor, get_color};
 
 static TILES: &str = " #@$.*+";
 
@@ -90,9 +90,8 @@ fn get_board_dimensions(tokens: &[Token]) -> (usize, usize) {
 }
 
 pub fn load_level(contents: &str) -> Result<Level, String> {
-    let color_map = get_color_map();
-    let chest_color = color_map.get(&TolColor::VibMagenta).unwrap();
-    let player_color = color_map.get(&TolColor::VibCyan).unwrap();
+    let chest_color = get_color(TolColor::VibMagenta);
+    let player_color = get_color(TolColor::VibCyan);
 
     let tokens = tokenize(contents);
     if tokens.is_none() {
