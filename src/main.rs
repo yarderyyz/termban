@@ -77,8 +77,9 @@ impl Widget for types::Level {
                     let px_x = player.coords.x;
                     let px_y = player.coords.y / 2;
                     let curs = &mut buf[(px_x as u16 + area.x , px_y as u16 + area.y)];
+
                     let color = Color::Rgb(0, 0, 255);
-                    if px_y % 2 == 0 {
+                    if player.coords.y % 2 == 0 {
                         curs.set_fg(color);
                     } else {
                         curs.set_bg(color);
@@ -130,10 +131,11 @@ fn main() -> io::Result<()> {
     let title = level.name.clone();
 
     loop {
-        let mut error: Option<String> = None;
+        let mut debug: Vec<String> = Vec::new();
+
         for entity in level.entities.iter_mut() {
             if let types::Entity::Player(player) = entity {
-                error = Some(format!("{:?}", player.coords.clone()));
+                debug.push(format!("{:?}", player.coords.clone()));
             }
         }
 
@@ -151,10 +153,7 @@ fn main() -> io::Result<()> {
             frame.render_widget(outer_left_block, left_area);
             frame.render_widget(level.clone(), inner_left);
 
-            let text = match error {
-                Some(err) => err,
-                None => "".to_string(),
-            };
+            let text = debug.join("\n");
             frame.render_widget(
                 Paragraph::new(text).block(Block::bordered().title("debug")),
                 right_area,
