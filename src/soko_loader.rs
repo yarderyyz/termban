@@ -1,3 +1,24 @@
+/*!
+ * Author: Lee Gauthier
+ *
+ * Description:
+ * This module is responsible for loading Sokoban game levels designed by David W. Skinner.
+ * It provides functionality to parse and load level data from files into the game structure.
+ * Each level is parsed and constructed into a game-ready format to be utilized by the game engine.
+ *
+ * This loader supports the standard Sokoban level format as specified by David W. Skinner,
+ * ensuring compatibility and correctness across different Sokoban level sets.
+ *
+ * Usage:
+ * The module functions are intended to be used by the game engine to initialize and start
+ * new games with pre-defined levels. Errors in file format or content are handled gracefully
+ * and reported to the caller.
+ *
+ * Notes:
+ * The levels are expected to be stored in plain text format with each level separated by
+ * a newline and starting with a level identifier.
+ */
+
 use ndarray::Array2;
 use crate::types::{
     Tile,
