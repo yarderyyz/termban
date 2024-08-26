@@ -79,7 +79,6 @@ impl Widget for types::Level {
                     let px_y = (player.coords.y / 2) as u16 + area.y;
                     if area.contains(Position { x: px_x as u16, y: px_y as u16}) {
                         let curs = &mut buf[(px_x, px_y)];
-
                         if player.coords.y % 2 == 0 {
                             curs.set_fg(player.color);
                         } else {
@@ -169,11 +168,28 @@ fn main() -> io::Result<()> {
                 // Iterate over mutable references to entities
                 for entity in level.entities.iter_mut() {
                     if let types::Entity::Player(player) = entity {
-                        match dir {
-                            Direction::Up => if player.coords.y > 0 {player.coords.y -= 1},
-                            Direction::Down => player.coords.y += 1,
-                            Direction::Left => if player.coords.x > 0 {player.coords.x -= 1},
-                            Direction:: Right => player.coords.x += 1,
+                        let new_coords = match dir {
+                            Direction::Up => types::Coordinates {
+                                x: player.coords.x,
+                                y: if player.coords.y > 0 {player.coords.y - 1} else { 0 }
+                            },
+                            Direction::Down => types::Coordinates {
+                                x: player.coords.x,
+                                y: player.coords.y + 1
+                            },
+                            Direction::Left => types::Coordinates {
+                                x: if player.coords.x > 0 {player.coords.x - 1} else { 0 },
+                                y: player.coords.y
+                            },
+                            Direction::Right => types::Coordinates {
+                                x: player.coords.x + 1,
+                                y: player.coords.y
+                            },
+                        };
+                        if let types::Tile::Wall = level.map[[new_coords.y, new_coords.x]] {
+                        } else {
+                            player.coords.x = new_coords.x;
+                            player.coords.y = new_coords.y;
                         }
                     }
                 }
