@@ -22,12 +22,14 @@ pub struct Coordinates {
 #[derive(Clone)]
 pub struct Player {
     pub coords: Coordinates,
+    pub color: Color,
 }
 
 #[derive(Debug)]
 #[derive(Clone)]
 pub struct Chest {
     pub coords: Coordinates,
+    pub color: Color,
 }
 
 #[derive(Debug)]

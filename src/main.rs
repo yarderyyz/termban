@@ -73,27 +73,28 @@ impl Widget for types::Level {
         }
         for entity in self.entities {
             match entity {
+                // TODO: Do this with traits or something, These render the exact same
                 types::Entity::Player(player) => {
-                    let px_x = player.coords.x;
-                    let px_y = player.coords.y / 2;
-                    let curs = &mut buf[(px_x as u16 + area.x , px_y as u16 + area.y)];
+                    let px_x = player.coords.x as u16 + area.x;
+                    let px_y = (player.coords.y / 2) as u16 + area.y;
+                    if area.contains(Position { x: px_x as u16, y: px_y as u16}) {
+                        let curs = &mut buf[(px_x, px_y)];
 
-                    let color = Color::Rgb(0, 0, 255);
-                    if player.coords.y % 2 == 0 {
-                        curs.set_fg(color);
-                    } else {
-                        curs.set_bg(color);
+                        if player.coords.y % 2 == 0 {
+                            curs.set_fg(player.color);
+                        } else {
+                            curs.set_bg(player.color);
+                        }
                     }
                 }
                 types::Entity::Chest(chest) => {
                     let px_x = chest.coords.x;
                     let px_y = chest.coords.y / 2;
                     let curs = &mut buf[(px_x as u16 + area.x , px_y as u16 + area.y)];
-                    let color = Color::Rgb(255, 0, 255);
-                    if px_y % 2 == 0 {
-                        curs.set_fg(color);
+                    if chest.coords.y % 2 == 0 {
+                        curs.set_fg(chest.color);
                     } else {
-                        curs.set_bg(color);
+                        curs.set_bg(chest.color);
                     }
                 }
             }
@@ -169,9 +170,9 @@ fn main() -> io::Result<()> {
                 for entity in level.entities.iter_mut() {
                     if let types::Entity::Player(player) = entity {
                         match dir {
-                            Direction::Up => player.coords.y -= 1,
+                            Direction::Up => if player.coords.y > 0 {player.coords.y -= 1},
                             Direction::Down => player.coords.y += 1,
-                            Direction::Left => player.coords.x -= 1,
+                            Direction::Left => if player.coords.x > 0 {player.coords.x -= 1},
                             Direction:: Right => player.coords.x += 1,
                         }
                     }

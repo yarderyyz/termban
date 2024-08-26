@@ -19,6 +19,7 @@
  * a newline and starting with a level identifier.
  */
 
+use ratatui::style::Color;
 use ndarray::Array2;
 use crate::types::{
     Tile,
@@ -113,7 +114,8 @@ pub fn load_level(contents: &str) -> Result<Level, String> {
                         entities.push(Entity::Player(Player {
                             coords: Coordinates {
                                 x: col, y: row
-                            }
+                            },
+                            color: Color::Rgb(0, 0, 255),
                         }));
                     }
                     Token::Entity('.') => {
@@ -123,7 +125,8 @@ pub fn load_level(contents: &str) -> Result<Level, String> {
                         entities.push(Entity::Chest(Chest {
                             coords: Coordinates {
                                 x: col, y: row
-                            }
+                            },
+                            color: Color::Rgb(255, 0, 255),
                         }));
                     }
                     Token::Entity('*') => {
@@ -131,7 +134,8 @@ pub fn load_level(contents: &str) -> Result<Level, String> {
                         entities.push(Entity::Chest(Chest {
                             coords: Coordinates {
                                 x: col, y: row
-                            }
+                            },
+                            color: Color::Rgb(255, 0, 255),
                         }));
                     }
                     Token::Entity('+') => {
@@ -139,7 +143,8 @@ pub fn load_level(contents: &str) -> Result<Level, String> {
                         entities.push(Entity::Player(Player {
                             coords: Coordinates {
                                 x: col, y: row
-                            }
+                            },
+                            color: Color::Rgb(0, 0, 255),
                         }));
                     }
                     Token::NewLine => {
