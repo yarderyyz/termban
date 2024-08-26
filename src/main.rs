@@ -53,7 +53,7 @@ struct Player {
 
 #[derive(Debug)]
 #[derive(Clone)]
-struct Box {
+struct Chest {
     coords: Coordinates,
 }
 
@@ -61,7 +61,7 @@ struct Box {
 #[derive(Clone)]
 enum Entity {
     Player(Player),
-    Box(Box)
+    Chest(Chest)
 }
 
 #[derive(Debug)]
@@ -121,9 +121,9 @@ impl Widget for Level {
                         curs.set_bg(color);
                     }
                 }
-                Entity::Box(b) => {
-                    let px_x = b.coords.x;
-                    let px_y = b.coords.y / 2;
+                Entity::Chest(chest) => {
+                    let px_x = chest.coords.x;
+                    let px_y = chest.coords.y / 2;
                     let curs = &mut buf[(px_x as u16 + area.x , px_y as u16 + area.y)];
                     let color = Color::Rgb(255, 0, 255);
                     if px_y % 2 == 0 {
@@ -265,7 +265,7 @@ fn load_level(contents: &str) -> Option<Level> {
                         map[[row, col]] = Tile::Goal;
                     }
                     Token::Entity('$') => {
-                        entities.push(Entity::Box(Box {
+                        entities.push(Entity::Chest(Chest {
                             coords: Coordinates {
                                 x: col, y: row
                             }
@@ -273,7 +273,7 @@ fn load_level(contents: &str) -> Option<Level> {
                     }
                     Token::Entity('*') => {
                         map[[row, col]] = Tile::Goal;
-                        entities.push(Entity::Box(Box {
+                        entities.push(Entity::Chest(Chest {
                             coords: Coordinates {
                                 x: col, y: row
                             }
