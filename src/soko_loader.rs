@@ -92,7 +92,7 @@ fn get_board_dimensions(tokens: &[Token]) -> (usize, usize) {
 pub fn load_level(contents: &str) -> Result<Level, String> {
     let color_map = get_color_map();
     let chest_color = color_map.get(&TolColor::VibMagenta).unwrap();
-    let player_color = color_map.get(&TolColor::VibOrange).unwrap();
+    let player_color = color_map.get(&TolColor::VibCyan).unwrap();
 
     let tokens = tokenize(contents);
     if tokens.is_none() {
