@@ -19,6 +19,7 @@ use std::io::{self, stdout, Read};
 
 mod soko_loader;
 mod types;
+mod colors;
 
 
 enum Direction {

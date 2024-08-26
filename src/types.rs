@@ -2,6 +2,7 @@ use std::fmt;
 use ratatui::style::Color;
 
 use ndarray::Array2;
+use crate::colors::{TolColor, get_color_map};
 
 #[derive(Debug)]
 #[derive(Clone)]
@@ -49,9 +50,10 @@ pub struct Level {
 
 impl Tile {
     pub fn color(&self) -> Option<Color> {
+        let color_map = get_color_map();
         match self {
-            Tile::Wall => Some(Color::Rgb(65, 117, 0)),
-            Tile::Goal => Some(Color::Rgb(230, 69, 0)),
+            Tile::Wall => Some(color_map.get(&TolColor::VibOrange).unwrap().clone()),
+            Tile::Goal => Some(color_map.get(&TolColor::VibRed).unwrap().clone()),
             Tile::Empty => Some(Color::Rgb(41, 19, 10)),
         }
     }

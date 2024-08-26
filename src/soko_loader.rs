@@ -29,6 +29,7 @@ use crate::types::{
     Chest,
     Coordinates
 };
+use crate::colors::{TolColor, get_color_map};
 
 static TILES: &str = " #@$.*+";
 
@@ -90,6 +91,10 @@ fn get_board_dimensions(tokens: &[Token]) -> (usize, usize) {
 }
 
 pub fn load_level(contents: &str) -> Result<Level, String> {
+    let color_map = get_color_map();
+    let chest_color = color_map.get(&TolColor::VibMagenta).unwrap();
+    let player_color = color_map.get(&TolColor::VibBlue).unwrap();
+
     let tokens = tokenize(contents);
     if tokens.is_none() {
         return Err("Level failed to load".to_string());
@@ -115,7 +120,7 @@ pub fn load_level(contents: &str) -> Result<Level, String> {
                             coords: Coordinates {
                                 x: col, y: row
                             },
-                            color: Color::Rgb(0, 0, 255),
+                            color: player_color.clone(),
                         }));
                     }
                     Token::Entity('.') => {
@@ -126,7 +131,7 @@ pub fn load_level(contents: &str) -> Result<Level, String> {
                             coords: Coordinates {
                                 x: col, y: row
                             },
-                            color: Color::Rgb(255, 0, 255),
+                            color: chest_color.clone(),
                         }));
                     }
                     Token::Entity('*') => {
@@ -135,7 +140,7 @@ pub fn load_level(contents: &str) -> Result<Level, String> {
                             coords: Coordinates {
                                 x: col, y: row
                             },
-                            color: Color::Rgb(255, 0, 255),
+                            color: chest_color.clone(),
                         }));
                     }
                     Token::Entity('+') => {
@@ -144,7 +149,7 @@ pub fn load_level(contents: &str) -> Result<Level, String> {
                             coords: Coordinates {
                                 x: col, y: row
                             },
-                            color: Color::Rgb(0, 0, 255),
+                            color: player_color.clone(),
                         }));
                     }
                     Token::NewLine => {
