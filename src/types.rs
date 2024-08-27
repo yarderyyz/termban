@@ -1,4 +1,6 @@
+use ratatui::prelude::Position;
 use ratatui::style::Color;
+use ratatui::{buffer::Buffer, layout::Rect, widgets::Widget};
 use std::fmt;
 
 use crate::colors::{get_color, TolColor};
@@ -25,20 +27,20 @@ pub enum Tile {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct Coordinates {
+pub struct Coordinate {
     pub x: usize,
     pub y: usize,
 }
 
 #[derive(Debug, Clone)]
 pub struct Player {
-    pub coords: Coordinates,
+    pub coords: Coordinate,
     pub color: Color,
 }
 
 #[derive(Debug, Clone)]
 pub struct Chest {
-    pub coords: Coordinates,
+    pub coords: Coordinate,
     pub color: Color,
 }
 
@@ -49,7 +51,7 @@ pub enum Entity {
 }
 
 impl Entity {
-    pub fn get_coords(&self) -> Coordinates {
+    pub fn get_coords(&self) -> Coordinate {
         match self {
             Entity::Player(player) => player.coords.clone(),
             Entity::Chest(chest) => chest.coords.clone(),
@@ -64,6 +66,22 @@ pub struct Level {
     pub name: String,
     pub map: Board,
     pub entities: Vec<Entity>,
+}
+
+impl Level {
+    pub fn is_tile_occupied(&self, coord: &Coordinate) -> bool {
+        match self.map[[coord.y, coord.x]] {
+            Tile::Wall => true,
+            _ => {
+                for ent in self.entities.iter() {
+                    if ent.get_coords() == *coord {
+                        return true;
+                    }
+                }
+                false
+            }
+        }
+    }
 }
 
 impl Tile {
@@ -96,5 +114,72 @@ impl fmt::Display for Level {
             writeln!(f)?;
         }
         Ok(())
+    }
+}
+
+impl Widget for Level {
+    #[allow(clippy::cast_precision_loss, clippy::similar_names)]
+    fn render(self, area: Rect, buf: &mut Buffer) {
+        let mut row_pixels;
+        let mut row_iter = self.map.outer_iter();
+        let mut yi: usize = 0;
+        while let Some(row_top) = row_iter.next() {
+            let maybe_row_bottom = row_iter.next();
+
+            let top_colors;
+            let bottom_colors;
+            match maybe_row_bottom {
+                Some(row_bottom) => {
+                    top_colors = row_top.map(|ent| ent.color());
+                    bottom_colors = row_bottom.map(|ent| ent.color());
+                    row_pixels = top_colors.iter().zip(bottom_colors.iter());
+                }
+                None => {
+                    top_colors = row_top.map(|ent| ent.color());
+                    bottom_colors = row_top.map(|_| None);
+                    row_pixels = top_colors.iter().zip(bottom_colors.iter());
+                }
+            }
+
+            for (xi, (fg, bg)) in row_pixels.enumerate() {
+                let curs = &mut buf[(xi as u16 + area.x, yi as u16 + area.y)];
+                curs.set_char('▀');
+                if let Some(fg) = fg {
+                    curs.set_fg(*fg);
+                }
+                if let Some(bg) = bg {
+                    curs.set_bg(*bg);
+                }
+            }
+
+            yi += 1;
+        }
+        for entity in self.entities {
+            match entity {
+                // TODO: Do this with traits or something, These render the exact same
+                Entity::Player(player) => {
+                    let px_x = player.coords.x as u16 + area.x;
+                    let px_y = (player.coords.y / 2) as u16 + area.y;
+                    if area.contains(Position { x: px_x, y: px_y }) {
+                        let curs = &mut buf[(px_x, px_y)];
+                        if player.coords.y % 2 == 0 {
+                            curs.set_fg(player.color);
+                        } else {
+                            curs.set_bg(player.color);
+                        }
+                    }
+                }
+                Entity::Chest(chest) => {
+                    let px_x = chest.coords.x;
+                    let px_y = chest.coords.y / 2;
+                    let curs = &mut buf[(px_x as u16 + area.x, px_y as u16 + area.y)];
+                    if chest.coords.y % 2 == 0 {
+                        curs.set_fg(chest.color);
+                    } else {
+                        curs.set_bg(chest.color);
+                    }
+                }
+            }
+        }
     }
 }

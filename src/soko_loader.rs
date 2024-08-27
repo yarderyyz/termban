@@ -20,7 +20,7 @@
  */
 
 use crate::colors::{get_color, TolColor};
-use crate::types::{Chest, Coordinates, Entity, Level, Player, Tile};
+use crate::types::{Chest, Coordinate, Entity, Level, Player, Tile};
 use ndarray::Array2;
 
 static TILES: &str = " #@$.*+";
@@ -108,7 +108,7 @@ pub fn load_level(contents: &str) -> Result<Level, String> {
                     }
                     Token::Entity('@') => {
                         entities.push(Entity::Player(Player {
-                            coords: Coordinates { x: col, y: row },
+                            coords: Coordinate { x: col, y: row },
                             color: player_color,
                         }));
                     }
@@ -117,21 +117,21 @@ pub fn load_level(contents: &str) -> Result<Level, String> {
                     }
                     Token::Entity('$') => {
                         entities.push(Entity::Chest(Chest {
-                            coords: Coordinates { x: col, y: row },
+                            coords: Coordinate { x: col, y: row },
                             color: chest_color,
                         }));
                     }
                     Token::Entity('*') => {
                         map[[row, col]] = Tile::Goal;
                         entities.push(Entity::Chest(Chest {
-                            coords: Coordinates { x: col, y: row },
+                            coords: Coordinate { x: col, y: row },
                             color: chest_color,
                         }));
                     }
                     Token::Entity('+') => {
                         map[[row, col]] = Tile::Goal;
                         entities.push(Entity::Player(Player {
-                            coords: Coordinates { x: col, y: row },
+                            coords: Coordinate { x: col, y: row },
                             color: player_color,
                         }));
                     }
