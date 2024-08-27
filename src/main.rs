@@ -169,27 +169,21 @@ fn get_new_coords(
 fn handle_events() -> io::Result<types::Action> {
     if event::poll(std::time::Duration::from_millis(50))? {
         if let Event::Key(key) = event::read()? {
-            if key.kind == event::KeyEventKind::Press && key.code == KeyCode::Char('q')
-            {
-                return Ok(types::Action::Quit);
-            }
-            if key.kind == event::KeyEventKind::Press && key.code == KeyCode::Char('w')
-            {
-                return Ok(types::Action::Move(types::Direction::Up));
-            }
-            if key.kind == event::KeyEventKind::Press && key.code == KeyCode::Char('s')
-            {
-                return Ok(types::Action::Move(types::Direction::Down));
-            }
-            if key.kind == event::KeyEventKind::Press && key.code == KeyCode::Char('a')
-            {
-                return Ok(types::Action::Move(types::Direction::Left));
-            }
-            if key.kind == event::KeyEventKind::Press && key.code == KeyCode::Char('d')
-            {
-                return Ok(types::Action::Move(types::Direction::Right));
+            if key.kind == event::KeyEventKind::Press {
+                return process_key_press(key.code);
             }
         }
     }
     Ok(types::Action::None)
+}
+
+fn process_key_press(key_code: KeyCode) -> io::Result<types::Action> {
+    match key_code {
+        KeyCode::Char('q') => Ok(types::Action::Quit),
+        KeyCode::Char('w') => Ok(types::Action::Move(types::Direction::Up)),
+        KeyCode::Char('s') => Ok(types::Action::Move(types::Direction::Down)),
+        KeyCode::Char('a') => Ok(types::Action::Move(types::Direction::Left)),
+        KeyCode::Char('d') => Ok(types::Action::Move(types::Direction::Right)),
+        _ => Ok(types::Action::None),
+    }
 }
