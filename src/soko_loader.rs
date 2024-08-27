@@ -23,12 +23,16 @@ use crate::colors::{get_color, TolColor};
 use crate::types::{Chest, Coordinate, Entity, Level, Player, Tile};
 use ndarray::Array2;
 
-static TILES: &str = " #@$.*+";
-
 #[derive(Debug)]
 enum Token {
     Text(String),
-    Entity(char),
+    Wall,
+    Player,
+    Chest,
+    Goal,
+    ChestGoal,
+    PlayerGoal,
+    Empty,
     NewLine,
 }
 
@@ -49,10 +53,15 @@ fn tokenize(contents: &str) -> Option<Tokens> {
             continue;
         }
         for ch in line.chars() {
-            if TILES.contains(ch) {
-                tokens.push(Token::Entity(ch));
-            } else {
-                return None;
+            match ch {
+                '#' => tokens.push(Token::Wall),
+                '@' => tokens.push(Token::Player),
+                '$' => tokens.push(Token::Chest),
+                '.' => tokens.push(Token::Goal),
+                '*' => tokens.push(Token::ChestGoal),
+                '+' => tokens.push(Token::PlayerGoal),
+                ' ' => tokens.push(Token::Empty),
+                _ => return None,
             }
         }
         tokens.push(Token::NewLine);
@@ -103,32 +112,32 @@ pub fn load_level(contents: &str) -> Result<Level, String> {
             let (mut col, mut row): (usize, usize) = (0, 0);
             for tok in level_toks.iter() {
                 match tok {
-                    Token::Entity('#') => {
+                    Token::Wall => {
                         map[[row, col]] = Tile::Wall;
                     }
-                    Token::Entity('@') => {
+                    Token::Player => {
                         entities.push(Entity::Player(Player {
                             coords: Coordinate { x: col, y: row },
                             color: player_color,
                         }));
                     }
-                    Token::Entity('.') => {
+                    Token::Goal => {
                         map[[row, col]] = Tile::Goal;
                     }
-                    Token::Entity('$') => {
+                    Token::Chest => {
                         entities.push(Entity::Chest(Chest {
                             coords: Coordinate { x: col, y: row },
                             color: chest_color,
                         }));
                     }
-                    Token::Entity('*') => {
+                    Token::ChestGoal => {
                         map[[row, col]] = Tile::Goal;
                         entities.push(Entity::Chest(Chest {
                             coords: Coordinate { x: col, y: row },
                             color: chest_color,
                         }));
                     }
-                    Token::Entity('+') => {
+                    Token::PlayerGoal => {
                         map[[row, col]] = Tile::Goal;
                         entities.push(Entity::Player(Player {
                             coords: Coordinate { x: col, y: row },

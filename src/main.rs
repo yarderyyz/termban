@@ -75,64 +75,7 @@ fn main() -> io::Result<()> {
             types::Action::Quit => {
                 break;
             }
-            types::Action::Move(direction) => {
-                let mut player_move = None;
-                // First we find the player and figure out what its new coords will be.
-                // if the player is trying to move into a wall we'll do nothing otherwise we'll
-                // set the move
-                for (index, entity) in level.entities.iter().enumerate() {
-                    if let types::Entity::Player(player) = entity {
-                        let new_chords =
-                            get_new_coords(player.coords.clone(), &direction);
-
-                        match level.map[[new_chords.y, new_chords.x]] {
-                            types::Tile::Wall => player_move = None,
-                            _ => player_move = Some((index, new_chords)),
-                        }
-                        break;
-                    }
-                }
-
-                let mut chest_move = None;
-                if let Some((_, player_coords)) = player_move.clone() {
-                    for (index, entity) in level.entities.iter().enumerate() {
-                        if let types::Entity::Chest(chest) = entity {
-                            // if there is a chest where the player wants to move see if we can
-                            // push it.
-                            if chest.coords == player_coords.clone() {
-                                let new_coord =
-                                    get_new_coords(chest.coords.clone(), &direction);
-
-                                if level.is_tile_occupied(&new_coord) {
-                                    // if the tile we are trying to move too is occupied both moves are
-                                    // invalid.
-                                    chest_move = None;
-                                    player_move = None;
-                                } else {
-                                    // otherwise move the chest
-                                    chest_move = Some((index, new_coord.clone()));
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // resolve the movement
-                if let Some((index, new_coords)) = player_move {
-                    if let types::Entity::Player(ref mut player) =
-                        &mut level.entities[index]
-                    {
-                        player.coords = new_coords.clone();
-                    }
-                }
-                if let Some((index, new_coords)) = chest_move {
-                    if let types::Entity::Chest(ref mut chest) =
-                        &mut level.entities[index]
-                    {
-                        chest.coords = new_coords.clone();
-                    }
-                }
-            }
+            types::Action::Move(direction) => handle_move(&mut level, direction),
             types::Action::None => {}
         }
     }
@@ -140,6 +83,59 @@ fn main() -> io::Result<()> {
     disable_raw_mode()?;
     stdout().execute(LeaveAlternateScreen)?;
     Ok(())
+}
+
+fn handle_move(level: &mut types::Level, direction: types::Direction) {
+    let mut player_move = None;
+    // First we find the player and figure out what its new coords will be.
+    // if the player is trying to move into a wall we'll do nothing otherwise we'll
+    // set the move
+    for (index, entity) in level.entities.iter().enumerate() {
+        if let types::Entity::Player(player) = entity {
+            let new_chords = get_new_coords(player.coords.clone(), &direction);
+
+            match level.map[[new_chords.y, new_chords.x]] {
+                types::Tile::Wall => player_move = None,
+                _ => player_move = Some((index, new_chords)),
+            }
+            break;
+        }
+    }
+
+    let mut chest_move = None;
+    if let Some((_, player_coords)) = player_move.clone() {
+        for (index, entity) in level.entities.iter().enumerate() {
+            if let types::Entity::Chest(chest) = entity {
+                // if there is a chest where the player wants to move see if we can
+                // push it.
+                if chest.coords == player_coords.clone() {
+                    let new_coord = get_new_coords(chest.coords.clone(), &direction);
+
+                    if level.is_tile_occupied(&new_coord) {
+                        // if the tile we are trying to move too is occupied both moves are
+                        // invalid.
+                        chest_move = None;
+                        player_move = None;
+                    } else {
+                        // otherwise move the chest
+                        chest_move = Some((index, new_coord.clone()));
+                    }
+                }
+            }
+        }
+    }
+
+    // resolve the movement
+    if let Some((index, new_coords)) = player_move {
+        if let types::Entity::Player(ref mut player) = &mut level.entities[index] {
+            player.coords = new_coords.clone();
+        }
+    }
+    if let Some((index, new_coords)) = chest_move {
+        if let types::Entity::Chest(ref mut chest) = &mut level.entities[index] {
+            chest.coords = new_coords.clone();
+        }
+    }
 }
 
 fn get_new_coords(
