@@ -86,6 +86,8 @@ fn main() -> io::Result<()> {
 }
 
 fn handle_move(level: &mut types::Level, direction: types::Direction) {
+    // TODO: rework me so I return a new world with the updated move rather than mutating the
+    // existing world. This is the first step to supporting UNDO
     let mut player_move = None;
     // First we find the player and figure out what its new coords will be.
     // if the player is trying to move into a wall we'll do nothing otherwise we'll

@@ -19,7 +19,6 @@
  * a newline and starting with a level identifier.
  */
 
-use crate::colors::{get_color, TolColor};
 use crate::types::{Chest, Coordinate, Entity, Level, Player, Tile};
 use ndarray::Array2;
 
@@ -92,9 +91,6 @@ fn get_board_dimensions(tokens: &[Token]) -> (usize, usize) {
 }
 
 pub fn load_level(contents: &str) -> Result<Level, String> {
-    let chest_color = get_color(TolColor::VibMagenta);
-    let player_color = get_color(TolColor::VibCyan);
-
     let tokens = tokenize(contents);
     if tokens.is_none() {
         return Err("Level failed to load".to_string());
@@ -118,7 +114,6 @@ pub fn load_level(contents: &str) -> Result<Level, String> {
                     Token::Player => {
                         entities.push(Entity::Player(Player {
                             coords: Coordinate { x: col, y: row },
-                            color: player_color,
                         }));
                     }
                     Token::Goal => {
@@ -127,21 +122,18 @@ pub fn load_level(contents: &str) -> Result<Level, String> {
                     Token::Chest => {
                         entities.push(Entity::Chest(Chest {
                             coords: Coordinate { x: col, y: row },
-                            color: chest_color,
                         }));
                     }
                     Token::ChestGoal => {
                         map[[row, col]] = Tile::Goal;
                         entities.push(Entity::Chest(Chest {
                             coords: Coordinate { x: col, y: row },
-                            color: chest_color,
                         }));
                     }
                     Token::PlayerGoal => {
                         map[[row, col]] = Tile::Goal;
                         entities.push(Entity::Player(Player {
                             coords: Coordinate { x: col, y: row },
-                            color: player_color,
                         }));
                     }
                     Token::NewLine => {

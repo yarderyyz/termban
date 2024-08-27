@@ -35,13 +35,11 @@ pub struct Coordinate {
 #[derive(Debug, Clone)]
 pub struct Player {
     pub coords: Coordinate,
-    pub color: Color,
 }
 
 #[derive(Debug, Clone)]
 pub struct Chest {
     pub coords: Coordinate,
-    pub color: Color,
 }
 
 #[derive(Debug, Clone)]
@@ -55,6 +53,12 @@ impl Entity {
         match self {
             Entity::Player(player) => player.coords.clone(),
             Entity::Chest(chest) => chest.coords.clone(),
+        }
+    }
+    pub fn color(&self) -> Color {
+        match self {
+            Entity::Player(_) => get_color(TolColor::VibMagenta),
+            Entity::Chest(_) => get_color(TolColor::VibCyan),
         }
     }
 }
@@ -155,29 +159,16 @@ impl Widget for Level {
             yi += 1;
         }
         for entity in self.entities {
-            match entity {
-                // TODO: Do this with traits or something, These render the exact same
-                Entity::Player(player) => {
-                    let px_x = player.coords.x as u16 + area.x;
-                    let px_y = (player.coords.y / 2) as u16 + area.y;
-                    if area.contains(Position { x: px_x, y: px_y }) {
-                        let curs = &mut buf[(px_x, px_y)];
-                        if player.coords.y % 2 == 0 {
-                            curs.set_fg(player.color);
-                        } else {
-                            curs.set_bg(player.color);
-                        }
-                    }
-                }
-                Entity::Chest(chest) => {
-                    let px_x = chest.coords.x;
-                    let px_y = chest.coords.y / 2;
-                    let curs = &mut buf[(px_x as u16 + area.x, px_y as u16 + area.y)];
-                    if chest.coords.y % 2 == 0 {
-                        curs.set_fg(chest.color);
-                    } else {
-                        curs.set_bg(chest.color);
-                    }
+            let coords = entity.get_coords();
+
+            let px_x = coords.x as u16 + area.x;
+            let px_y = (coords.y / 2) as u16 + area.y;
+            if area.contains(Position { x: px_x, y: px_y }) {
+                let curs = &mut buf[(px_x, px_y)];
+                if coords.y % 2 == 0 {
+                    curs.set_fg(entity.color());
+                } else {
+                    curs.set_bg(entity.color());
                 }
             }
         }
