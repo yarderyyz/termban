@@ -45,7 +45,7 @@ fn tokenize(contents: &str) -> Option<Tokens> {
             tokens.push(Token::Text(line_chars.as_str().to_string()));
             continue;
         }
-        if line.len() == 0 {
+        if line.is_empty() {
             continue;
         }
         for ch in line.chars() {
@@ -79,8 +79,7 @@ fn get_board_dimensions(tokens: &[Token]) -> (usize, usize) {
             }
         }
     }
-
-    return (ncols, nrows);
+    (ncols, nrows)
 }
 
 pub fn load_level(contents: &str) -> Result<Level, String> {
@@ -110,7 +109,7 @@ pub fn load_level(contents: &str) -> Result<Level, String> {
                     Token::Entity('@') => {
                         entities.push(Entity::Player(Player {
                             coords: Coordinates { x: col, y: row },
-                            color: player_color.clone(),
+                            color: player_color,
                         }));
                     }
                     Token::Entity('.') => {
@@ -119,21 +118,21 @@ pub fn load_level(contents: &str) -> Result<Level, String> {
                     Token::Entity('$') => {
                         entities.push(Entity::Chest(Chest {
                             coords: Coordinates { x: col, y: row },
-                            color: chest_color.clone(),
+                            color: chest_color,
                         }));
                     }
                     Token::Entity('*') => {
                         map[[row, col]] = Tile::Goal;
                         entities.push(Entity::Chest(Chest {
                             coords: Coordinates { x: col, y: row },
-                            color: chest_color.clone(),
+                            color: chest_color,
                         }));
                     }
                     Token::Entity('+') => {
                         map[[row, col]] = Tile::Goal;
                         entities.push(Entity::Player(Player {
                             coords: Coordinates { x: col, y: row },
-                            color: player_color.clone(),
+                            color: player_color,
                         }));
                     }
                     Token::NewLine => {
@@ -152,10 +151,8 @@ pub fn load_level(contents: &str) -> Result<Level, String> {
                 map,
                 entities,
             };
-            return Ok(level);
+            Ok(level)
         }
-        _ => {
-            return Err("Level must start with a title".to_string());
-        }
+        _ => Err("Level must start with a title".to_string()),
     }
 }

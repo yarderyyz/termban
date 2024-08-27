@@ -17,10 +17,6 @@ pub enum Action {
     None,
 }
 
-pub trait Movable {
-    fn maybe_move(&mut self, direction: Direction, board: Board);
-}
-
 #[derive(Debug, Clone)]
 pub enum Tile {
     Empty,
@@ -46,18 +42,6 @@ pub struct Chest {
     pub color: Color,
 }
 
-impl Movable for Player {
-    fn maybe_move(&mut self, direction: Direction, board: Board) {
-        // Implement the logic for moving a player
-    }
-}
-
-impl Movable for Chest {
-    fn maybe_move(&mut self, direction: Direction, board: Board) {
-        // Implement the logic for moving a chest
-    }
-}
-
 #[derive(Debug, Clone)]
 pub enum Entity {
     Player(Player),
@@ -65,12 +49,6 @@ pub enum Entity {
 }
 
 impl Entity {
-    pub fn maybe_move(&mut self, direction: Direction, board: Board) {
-        match self {
-            Entity::Player(player) => player.maybe_move(direction, board),
-            Entity::Chest(chest) => chest.maybe_move(direction, board),
-        }
-    }
     pub fn get_coords(&self) -> Coordinates {
         match self {
             Entity::Player(player) => player.coords.clone(),

@@ -1,4 +1,3 @@
-use palette::{IntoColor, Okhsv, Srgb};
 use ratatui::prelude::*;
 use ratatui::{
     backend::CrosstermBackend,
@@ -13,7 +12,7 @@ use ratatui::{
     widgets::{Block, Paragraph},
     Frame, Terminal,
 };
-use ratatui::{buffer::Buffer, layout::Rect, style::Color, widgets::Widget};
+use ratatui::{buffer::Buffer, layout::Rect, widgets::Widget};
 
 use std::fs::File;
 use std::io::{self, stdout, Read};
@@ -50,10 +49,10 @@ impl Widget for types::Level {
                 let curs = &mut buf[(xi as u16 + area.x, yi as u16 + area.y)];
                 curs.set_char('▀');
                 if let Some(fg) = fg {
-                    curs.set_fg(fg.clone());
+                    curs.set_fg(*fg);
                 }
                 if let Some(bg) = bg {
-                    curs.set_bg(bg.clone());
+                    curs.set_bg(*bg);
                 }
             }
 
@@ -65,10 +64,7 @@ impl Widget for types::Level {
                 types::Entity::Player(player) => {
                     let px_x = player.coords.x as u16 + area.x;
                     let px_y = (player.coords.y / 2) as u16 + area.y;
-                    if area.contains(Position {
-                        x: px_x as u16,
-                        y: px_y as u16,
-                    }) {
+                    if area.contains(Position { x: px_x, y: px_y }) {
                         let curs = &mut buf[(px_x, px_y)];
                         if player.coords.y % 2 == 0 {
                             curs.set_fg(player.color);
