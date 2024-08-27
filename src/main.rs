@@ -92,12 +92,6 @@ impl Widget for types::Level {
     }
 }
 
-pub fn color_from_oklab(hue: f32, saturation: f32, value: f32) -> Color {
-    let color: Srgb = Okhsv::new(hue, saturation, value).into_color();
-    let color = color.into_format();
-    Color::Rgb(color.red, color.green, color.blue)
-}
-
 fn read_file(filename: &str) -> Result<String, io::Error> {
     let mut file = File::open(filename)?;
     let mut contents = String::new();
@@ -155,41 +149,67 @@ fn main() -> io::Result<()> {
             }
             types::Action::Move(direction) => {
                 // Iterate over mutable references to entities
-                for entity in level.entities.iter_mut() {
+                let mut player_move = None;
+                for (index, entity) in level.entities.iter().enumerate() {
                     if let types::Entity::Player(player) = entity {
-                        let new_coords = match direction {
-                            types::Direction::Up => types::Coordinates {
-                                x: player.coords.x,
-                                y: if player.coords.y > 0 {
-                                    player.coords.y - 1
-                                } else {
-                                    0
-                                },
-                            },
-                            types::Direction::Down => types::Coordinates {
-                                x: player.coords.x,
-                                y: player.coords.y + 1,
-                            },
-                            types::Direction::Left => types::Coordinates {
-                                x: if player.coords.x > 0 {
-                                    player.coords.x - 1
-                                } else {
-                                    0
-                                },
-                                y: player.coords.y,
-                            },
-                            types::Direction::Right => types::Coordinates {
-                                x: player.coords.x + 1,
-                                y: player.coords.y,
-                            },
-                        };
-                        match level.map[[new_coords.y, new_coords.x]] {
-                            types::Tile::Wall => {} // Don't move its into a wall
-                            _ => {
-                                player.coords.x = new_coords.x;
-                                player.coords.y = new_coords.y;
+                        let new_chords =
+                            get_new_coords(player.coords.clone(), &direction);
+
+                        match level.map[[new_chords.y, new_chords.x]] {
+                            types::Tile::Wall => player_move = None,
+                            _ => player_move = Some((index, new_chords)),
+                        }
+                        break;
+                    }
+                }
+
+                let mut chest_move = None;
+                if let Some((_, player_coords)) = player_move.clone() {
+                    for (index, entity) in level.entities.iter().enumerate() {
+                        if let types::Entity::Chest(chest) = entity {
+                            if let Some((_, ref chest_coords)) = chest_move {
+                                // if the place we are trying to move has a chest we can't do it.
+                                if chest.coords == *chest_coords {
+                                    chest_move = None;
+                                    player_move = None;
+                                    break;
+                                }
+                            } else if chest.coords == player_coords.clone() {
+                                let new_coords =
+                                    get_new_coords(chest.coords.clone(), &direction);
+
+                                match level.map[[new_coords.y, new_coords.x]] {
+                                    types::Tile::Wall => {
+                                        player_move = None;
+                                        break;
+                                    }
+                                    _ => {
+                                        chest_move = Some((index, new_coords.clone()));
+                                        for ent in level.entities.iter() {
+                                            if ent.get_coords() == new_coords {
+                                                chest_move = None;
+                                                player_move = None;
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
+                    }
+                }
+
+                if let Some((index, new_coords)) = player_move {
+                    if let types::Entity::Player(ref mut player) =
+                        &mut level.entities[index]
+                    {
+                        player.coords = new_coords.clone();
+                    }
+                }
+                if let Some((index, new_coords)) = chest_move {
+                    if let types::Entity::Chest(ref mut chest) =
+                        &mut level.entities[index]
+                    {
+                        chest.coords = new_coords.clone();
                     }
                 }
             }
@@ -200,6 +220,30 @@ fn main() -> io::Result<()> {
     disable_raw_mode()?;
     stdout().execute(LeaveAlternateScreen)?;
     Ok(())
+}
+
+fn get_new_coords(
+    coords: types::Coordinates,
+    direction: &types::Direction,
+) -> types::Coordinates {
+    match direction {
+        types::Direction::Up => types::Coordinates {
+            x: coords.x,
+            y: if coords.y > 0 { coords.y - 1 } else { 0 },
+        },
+        types::Direction::Down => types::Coordinates {
+            x: coords.x,
+            y: coords.y + 1,
+        },
+        types::Direction::Left => types::Coordinates {
+            x: if coords.x > 0 { coords.x - 1 } else { 0 },
+            y: coords.y,
+        },
+        types::Direction::Right => types::Coordinates {
+            x: coords.x + 1,
+            y: coords.y,
+        },
+    }
 }
 
 fn handle_events() -> io::Result<types::Action> {

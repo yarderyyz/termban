@@ -18,7 +18,7 @@ pub enum Action {
 }
 
 pub trait Movable {
-    fn maybe_move(&mut self);
+    fn maybe_move(&mut self, direction: Direction, board: Board);
 }
 
 #[derive(Debug, Clone)]
@@ -28,7 +28,7 @@ pub enum Tile {
     Goal,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Coordinates {
     pub x: usize,
     pub y: usize,
@@ -47,13 +47,13 @@ pub struct Chest {
 }
 
 impl Movable for Player {
-    fn maybe_move(&mut self) {
+    fn maybe_move(&mut self, direction: Direction, board: Board) {
         // Implement the logic for moving a player
     }
 }
 
 impl Movable for Chest {
-    fn maybe_move(&mut self) {
+    fn maybe_move(&mut self, direction: Direction, board: Board) {
         // Implement the logic for moving a chest
     }
 }
@@ -65,18 +65,26 @@ pub enum Entity {
 }
 
 impl Entity {
-    pub fn maybe_move(&mut self) {
+    pub fn maybe_move(&mut self, direction: Direction, board: Board) {
         match self {
-            Entity::Player(player) => player.maybe_move(),
-            Entity::Chest(chest) => chest.maybe_move(),
+            Entity::Player(player) => player.maybe_move(direction, board),
+            Entity::Chest(chest) => chest.maybe_move(direction, board),
+        }
+    }
+    pub fn get_coords(&self) -> Coordinates {
+        match self {
+            Entity::Player(player) => player.coords.clone(),
+            Entity::Chest(chest) => chest.coords.clone(),
         }
     }
 }
 
+type Board = Array2<Tile>;
+
 #[derive(Debug, Clone)]
 pub struct Level {
     pub name: String,
-    pub map: Array2<Tile>,
+    pub map: Board,
     pub entities: Vec<Entity>,
 }
 
