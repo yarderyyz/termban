@@ -23,8 +23,7 @@ use crate::colors::{get_color, TolColor};
 use crate::types::{Chest, Coordinates, Entity, Level, Player, Tile};
 use ndarray::Array2;
 
-static TILES: &str =
-    " #@$.*+";
+static TILES: &str = " #@$.*+";
 
 #[derive(Debug)]
 enum Token {
@@ -33,18 +32,11 @@ enum Token {
     NewLine,
 }
 
-type Tokens =
-    Vec<Token>;
+type Tokens = Vec<Token>;
 
-fn tokenize(
-    contents: &str,
-) -> Option<Tokens>
-{
+fn tokenize(contents: &str) -> Option<Tokens> {
     let mut tokens: Tokens = Tokens::new();
-    for line in
-        contents
-            .lines()
-    {
+    for line in contents.lines() {
         if line.starts_with(';') {
             // TODO: Do this less dumb
             let mut line_chars = line.chars();
@@ -53,10 +45,7 @@ fn tokenize(
             tokens.push(Token::Text(line_chars.as_str().to_string()));
             continue;
         }
-        if line
-            .len()
-            == 0
-        {
+        if line.len() == 0 {
             continue;
         }
         for ch in line.chars() {
@@ -71,21 +60,15 @@ fn tokenize(
     Some(tokens)
 }
 
-fn get_board_dimensions(
-    tokens: &[Token],
-) -> (usize, usize)
-{
-    let mut ncols =
-        0;
+fn get_board_dimensions(tokens: &[Token]) -> (usize, usize) {
+    let mut ncols = 0;
     let nrows = tokens
         .iter()
         .filter(|tok| matches!(tok, Token::NewLine))
         .count();
 
     let mut count: usize = 0;
-    for token in
-        tokens
-    {
+    for token in tokens {
         match token {
             Token::NewLine => {
                 ncols = if count > ncols { count } else { ncols };
@@ -97,36 +80,20 @@ fn get_board_dimensions(
         }
     }
 
-    return (
-        ncols,
-        nrows,
-    );
+    return (ncols, nrows);
 }
 
-pub fn load_level(
-    contents: &str,
-) -> Result<
-    Level,
-    String,
-> {
+pub fn load_level(contents: &str) -> Result<Level, String> {
     let chest_color = get_color(TolColor::VibMagenta);
     let player_color = get_color(TolColor::VibCyan);
 
     let tokens = tokenize(contents);
-    if tokens
-        .is_none()
-    {
+    if tokens.is_none() {
         return Err("Level failed to load".to_string());
     }
-    let tokens =
-        tokens
-            .unwrap(
-            );
-    match tokens
-        .as_slice()
-    {
-        [Token::Text(title), level_toks @ ..] =>
-        {
+    let tokens = tokens.unwrap();
+    match tokens.as_slice() {
+        [Token::Text(title), level_toks @ ..] => {
             // Dimensions for the board
             let (rows, cols) = get_board_dimensions(level_toks);
 

@@ -19,14 +19,7 @@ use ratatui::style::Color;
 use std::collections::HashMap;
 use std::sync::OnceLock;
 
-#[derive(
-    Debug,
-    Clone,
-    Copy,
-    PartialEq,
-    Eq,
-    Hash,
-)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum TolColor {
     BriBlue,
     BriCyan,
@@ -71,11 +64,7 @@ pub enum TolColor {
 // Create a static `Lazy` instance to hold the color map
 static COLOR_MAP: OnceLock<HashMap<TolColor, Color>> = OnceLock::new();
 
-fn build_color_map(
-) -> HashMap<
-    TolColor,
-    Color,
-> {
+fn build_color_map() -> HashMap<TolColor, Color> {
     let mut color_map = HashMap::new();
 
     // Bright color scheme
@@ -125,12 +114,7 @@ fn build_color_map(
     color_map
 }
 
-pub fn get_color(
-    color: TolColor,
-) -> Color {
+pub fn get_color(color: TolColor) -> Color {
     let color_map = COLOR_MAP.get_or_init(build_color_map);
-    color_map
-        .get(&color)
-        .unwrap()
-        .clone()
+    color_map.get(&color).unwrap().clone()
 }
