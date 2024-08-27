@@ -19,18 +19,12 @@
  * a newline and starting with a level identifier.
  */
 
+use crate::colors::{get_color, TolColor};
+use crate::types::{Chest, Coordinates, Entity, Level, Player, Tile};
 use ndarray::Array2;
-use crate::types::{
-    Tile,
-    Level,
-    Entity,
-    Player,
-    Chest,
-    Coordinates
-};
-use crate::colors::{TolColor, get_color};
 
-static TILES: &str = " #@$.*+";
+static TILES: &str =
+    " #@$.*+";
 
 #[derive(Debug)]
 enum Token {
@@ -39,11 +33,18 @@ enum Token {
     NewLine,
 }
 
-type Tokens = Vec<Token>;
+type Tokens =
+    Vec<Token>;
 
-fn tokenize(contents: &str) -> Option<Tokens> {
+fn tokenize(
+    contents: &str,
+) -> Option<Tokens>
+{
     let mut tokens: Tokens = Tokens::new();
-    for line in contents.lines() {
+    for line in
+        contents
+            .lines()
+    {
         if line.starts_with(';') {
             // TODO: Do this less dumb
             let mut line_chars = line.chars();
@@ -52,7 +53,10 @@ fn tokenize(contents: &str) -> Option<Tokens> {
             tokens.push(Token::Text(line_chars.as_str().to_string()));
             continue;
         }
-        if line.len() == 0 {
+        if line
+            .len()
+            == 0
+        {
             continue;
         }
         for ch in line.chars() {
@@ -67,47 +71,70 @@ fn tokenize(contents: &str) -> Option<Tokens> {
     Some(tokens)
 }
 
-fn get_board_dimensions(tokens: &[Token]) -> (usize, usize) {
-    let mut ncols = 0;
-    let nrows = tokens.iter()
+fn get_board_dimensions(
+    tokens: &[Token],
+) -> (usize, usize)
+{
+    let mut ncols =
+        0;
+    let nrows = tokens
+        .iter()
         .filter(|tok| matches!(tok, Token::NewLine))
         .count();
 
     let mut count: usize = 0;
-    for token in tokens {
+    for token in
+        tokens
+    {
         match token {
             Token::NewLine => {
                 ncols = if count > ncols { count } else { ncols };
                 count = 0;
-            },
+            }
             _ => {
                 count += 1;
             }
         }
     }
 
-    return (ncols, nrows)
+    return (
+        ncols,
+        nrows,
+    );
 }
 
-pub fn load_level(contents: &str) -> Result<Level, String> {
+pub fn load_level(
+    contents: &str,
+) -> Result<
+    Level,
+    String,
+> {
     let chest_color = get_color(TolColor::VibMagenta);
     let player_color = get_color(TolColor::VibCyan);
 
     let tokens = tokenize(contents);
-    if tokens.is_none() {
+    if tokens
+        .is_none()
+    {
         return Err("Level failed to load".to_string());
     }
-    let tokens = tokens.unwrap();
-    match tokens.as_slice() {
-        [Token::Text(title), level_toks @ ..] => {
+    let tokens =
+        tokens
+            .unwrap(
+            );
+    match tokens
+        .as_slice()
+    {
+        [Token::Text(title), level_toks @ ..] =>
+        {
             // Dimensions for the board
-            let (rows, cols)= get_board_dimensions(level_toks);
+            let (rows, cols) = get_board_dimensions(level_toks);
 
             // Create an initial board with default values (e.g., all `Wall`)
             let mut map = Array2::from_elem((cols, rows), Tile::Empty);
             let mut entities = Vec::new();
 
-            let (mut col, mut row): (usize, usize) = (0,0);
+            let (mut col, mut row): (usize, usize) = (0, 0);
             for tok in level_toks.iter() {
                 match tok {
                     Token::Entity('#') => {
@@ -115,9 +142,7 @@ pub fn load_level(contents: &str) -> Result<Level, String> {
                     }
                     Token::Entity('@') => {
                         entities.push(Entity::Player(Player {
-                            coords: Coordinates {
-                                x: col, y: row
-                            },
+                            coords: Coordinates { x: col, y: row },
                             color: player_color.clone(),
                         }));
                     }
@@ -126,27 +151,21 @@ pub fn load_level(contents: &str) -> Result<Level, String> {
                     }
                     Token::Entity('$') => {
                         entities.push(Entity::Chest(Chest {
-                            coords: Coordinates {
-                                x: col, y: row
-                            },
+                            coords: Coordinates { x: col, y: row },
                             color: chest_color.clone(),
                         }));
                     }
                     Token::Entity('*') => {
                         map[[row, col]] = Tile::Goal;
                         entities.push(Entity::Chest(Chest {
-                            coords: Coordinates {
-                                x: col, y: row
-                            },
+                            coords: Coordinates { x: col, y: row },
                             color: chest_color.clone(),
                         }));
                     }
                     Token::Entity('+') => {
                         map[[row, col]] = Tile::Goal;
                         entities.push(Entity::Player(Player {
-                            coords: Coordinates {
-                                x: col, y: row
-                            },
+                            coords: Coordinates { x: col, y: row },
                             color: player_color.clone(),
                         }));
                     }
@@ -167,7 +186,7 @@ pub fn load_level(contents: &str) -> Result<Level, String> {
                 entities,
             };
             return Ok(level);
-        },
+        }
         _ => {
             return Err("Level must start with a title".to_string());
         }

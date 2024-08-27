@@ -1,10 +1,12 @@
 use palette::{IntoColor, Okhsv, Srgb};
+use ratatui::prelude::*;
 use ratatui::{
     backend::CrosstermBackend,
     crossterm::{
         event::{self, Event, KeyCode},
         terminal::{
-            disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen,
+            disable_raw_mode, enable_raw_mode, EnterAlternateScreen,
+            LeaveAlternateScreen,
         },
         ExecutableCommand,
     },
@@ -12,28 +14,13 @@ use ratatui::{
     Frame, Terminal,
 };
 use ratatui::{buffer::Buffer, layout::Rect, style::Color, widgets::Widget};
-use ratatui::prelude::*;
 
 use std::fs::File;
 use std::io::{self, stdout, Read};
 
+mod colors;
 mod soko_loader;
 mod types;
-mod colors;
-
-
-enum Direction {
-    Left,
-    Right,
-    Up,
-    Down,
-}
-
-enum Action {
-    Quit,
-    Move(Direction),
-    None,
-}
 
 impl Widget for types::Level {
     #[allow(clippy::cast_precision_loss, clippy::similar_names)]
@@ -51,7 +38,7 @@ impl Widget for types::Level {
                     top_colors = row_top.map(|ent| ent.color());
                     bottom_colors = row_bottom.map(|ent| ent.color());
                     row_pixels = top_colors.iter().zip(bottom_colors.iter());
-                },
+                }
                 None => {
                     top_colors = row_top.map(|ent| ent.color());
                     bottom_colors = row_top.map(|_| None);
@@ -60,7 +47,7 @@ impl Widget for types::Level {
             }
 
             for (xi, (fg, bg)) in row_pixels.enumerate() {
-                let curs = &mut buf[(xi as u16 + area.x , yi as u16 + area.y)];
+                let curs = &mut buf[(xi as u16 + area.x, yi as u16 + area.y)];
                 curs.set_char('▀');
                 if let Some(fg) = fg {
                     curs.set_fg(fg.clone());
@@ -78,7 +65,10 @@ impl Widget for types::Level {
                 types::Entity::Player(player) => {
                     let px_x = player.coords.x as u16 + area.x;
                     let px_y = (player.coords.y / 2) as u16 + area.y;
-                    if area.contains(Position { x: px_x as u16, y: px_y as u16}) {
+                    if area.contains(Position {
+                        x: px_x as u16,
+                        y: px_y as u16,
+                    }) {
                         let curs = &mut buf[(px_x, px_y)];
                         if player.coords.y % 2 == 0 {
                             curs.set_fg(player.color);
@@ -90,7 +80,7 @@ impl Widget for types::Level {
                 types::Entity::Chest(chest) => {
                     let px_x = chest.coords.x;
                     let px_y = chest.coords.y / 2;
-                    let curs = &mut buf[(px_x as u16 + area.x , px_y as u16 + area.y)];
+                    let curs = &mut buf[(px_x as u16 + area.x, px_y as u16 + area.y)];
                     if chest.coords.y % 2 == 0 {
                         curs.set_fg(chest.color);
                     } else {
@@ -102,13 +92,11 @@ impl Widget for types::Level {
     }
 }
 
-
 pub fn color_from_oklab(hue: f32, saturation: f32, value: f32) -> Color {
     let color: Srgb = Okhsv::new(hue, saturation, value).into_color();
     let color = color.into_format();
     Color::Rgb(color.red, color.green, color.blue)
 }
-
 
 fn read_file(filename: &str) -> Result<String, io::Error> {
     let mut file = File::open(filename)?;
@@ -116,7 +104,6 @@ fn read_file(filename: &str) -> Result<String, io::Error> {
     file.read_to_string(&mut contents)?;
     Ok(contents)
 }
-
 
 fn main() -> io::Result<()> {
     enable_raw_mode()?;
@@ -141,12 +128,13 @@ fn main() -> io::Result<()> {
         }
 
         terminal.draw(|frame: &mut Frame| {
-
             let main_area = frame.area();
 
-            let [left_area, right_area] =
-                Layout::horizontal([Constraint::Percentage(50), Constraint::Percentage(50)])
-                .areas(main_area);
+            let [left_area, right_area] = Layout::horizontal([
+                Constraint::Percentage(50),
+                Constraint::Percentage(50),
+            ])
+            .areas(main_area);
 
             let outer_left_block = Block::bordered().title(title.clone());
             let inner_left = outer_left_block.inner(left_area);
@@ -162,40 +150,50 @@ fn main() -> io::Result<()> {
         })?;
 
         match handle_events()? {
-            Action::Quit => {
+            types::Action::Quit => {
                 break;
-            },
-            Action::Move(dir) => {
+            }
+            types::Action::Move(direction) => {
                 // Iterate over mutable references to entities
                 for entity in level.entities.iter_mut() {
                     if let types::Entity::Player(player) = entity {
-                        let new_coords = match dir {
-                            Direction::Up => types::Coordinates {
+                        let new_coords = match direction {
+                            types::Direction::Up => types::Coordinates {
                                 x: player.coords.x,
-                                y: if player.coords.y > 0 {player.coords.y - 1} else { 0 }
+                                y: if player.coords.y > 0 {
+                                    player.coords.y - 1
+                                } else {
+                                    0
+                                },
                             },
-                            Direction::Down => types::Coordinates {
+                            types::Direction::Down => types::Coordinates {
                                 x: player.coords.x,
-                                y: player.coords.y + 1
+                                y: player.coords.y + 1,
                             },
-                            Direction::Left => types::Coordinates {
-                                x: if player.coords.x > 0 {player.coords.x - 1} else { 0 },
-                                y: player.coords.y
+                            types::Direction::Left => types::Coordinates {
+                                x: if player.coords.x > 0 {
+                                    player.coords.x - 1
+                                } else {
+                                    0
+                                },
+                                y: player.coords.y,
                             },
-                            Direction::Right => types::Coordinates {
+                            types::Direction::Right => types::Coordinates {
                                 x: player.coords.x + 1,
-                                y: player.coords.y
+                                y: player.coords.y,
                             },
                         };
-                        if let types::Tile::Wall = level.map[[new_coords.y, new_coords.x]] {
-                        } else {
-                            player.coords.x = new_coords.x;
-                            player.coords.y = new_coords.y;
+                        match level.map[[new_coords.y, new_coords.x]] {
+                            types::Tile::Wall => {} // Don't move its into a wall
+                            _ => {
+                                player.coords.x = new_coords.x;
+                                player.coords.y = new_coords.y;
+                            }
                         }
                     }
                 }
             }
-            Action::None => {}
+            types::Action::None => {}
         }
     }
 
@@ -204,25 +202,30 @@ fn main() -> io::Result<()> {
     Ok(())
 }
 
-fn handle_events() -> io::Result<Action> {
+fn handle_events() -> io::Result<types::Action> {
     if event::poll(std::time::Duration::from_millis(50))? {
         if let Event::Key(key) = event::read()? {
-            if key.kind == event::KeyEventKind::Press && key.code == KeyCode::Char('q') {
-                return Ok(Action::Quit);
+            if key.kind == event::KeyEventKind::Press && key.code == KeyCode::Char('q')
+            {
+                return Ok(types::Action::Quit);
             }
-            if key.kind == event::KeyEventKind::Press && key.code == KeyCode::Char('w') {
-                return Ok(Action::Move(Direction::Up));
+            if key.kind == event::KeyEventKind::Press && key.code == KeyCode::Char('w')
+            {
+                return Ok(types::Action::Move(types::Direction::Up));
             }
-            if key.kind == event::KeyEventKind::Press && key.code == KeyCode::Char('s') {
-                return Ok(Action::Move(Direction::Down));
+            if key.kind == event::KeyEventKind::Press && key.code == KeyCode::Char('s')
+            {
+                return Ok(types::Action::Move(types::Direction::Down));
             }
-            if key.kind == event::KeyEventKind::Press && key.code == KeyCode::Char('a') {
-                return Ok(Action::Move(Direction::Left));
+            if key.kind == event::KeyEventKind::Press && key.code == KeyCode::Char('a')
+            {
+                return Ok(types::Action::Move(types::Direction::Left));
             }
-            if key.kind == event::KeyEventKind::Press && key.code == KeyCode::Char('d') {
-                return Ok(Action::Move(Direction::Right));
+            if key.kind == event::KeyEventKind::Press && key.code == KeyCode::Char('d')
+            {
+                return Ok(types::Action::Move(types::Direction::Right));
             }
         }
     }
-    Ok(Action::None)
+    Ok(types::Action::None)
 }
