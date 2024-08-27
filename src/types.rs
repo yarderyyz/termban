@@ -16,6 +16,8 @@ pub enum Direction {
 pub enum Action {
     Quit,
     Move(Direction),
+    Undo,
+    Reset,
     None,
 }
 

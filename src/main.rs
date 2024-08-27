@@ -31,6 +31,7 @@ fn main() -> io::Result<()> {
     enable_raw_mode()?;
     stdout().execute(EnterAlternateScreen)?;
     let mut terminal = Terminal::new(CrosstermBackend::new(stdout()))?;
+    let mut history = Vec::new();
 
     let filename = "./resources/levels/micro.ban";
     // TODO: actually handle errors here
@@ -75,7 +76,21 @@ fn main() -> io::Result<()> {
             types::Action::Quit => {
                 break;
             }
-            types::Action::Move(direction) => handle_move(&mut level, direction),
+            types::Action::Move(direction) => {
+                history.push(level.clone());
+                level = handle_move(&level, direction);
+            }
+            types::Action::Undo => {
+                if let Some(prev_level) = history.pop() {
+                    level = prev_level;
+                }
+            }
+            types::Action::Reset => {
+                history.push(level.clone());
+                if let Some(prev_level) = history.first() {
+                    level = prev_level.clone();
+                }
+            }
             types::Action::None => {}
         }
     }
@@ -85,10 +100,12 @@ fn main() -> io::Result<()> {
     Ok(())
 }
 
-fn handle_move(level: &mut types::Level, direction: types::Direction) {
+fn handle_move(prev_level: &types::Level, direction: types::Direction) -> types::Level {
     // TODO: rework me so I return a new world with the updated move rather than mutating the
     // existing world. This is the first step to supporting UNDO
     let mut player_move = None;
+    let mut level = prev_level.clone();
+
     // First we find the player and figure out what its new coords will be.
     // if the player is trying to move into a wall we'll do nothing otherwise we'll
     // set the move
@@ -138,6 +155,8 @@ fn handle_move(level: &mut types::Level, direction: types::Direction) {
             chest.coords = new_coords.clone();
         }
     }
+
+    level
 }
 
 fn get_new_coords(
@@ -178,6 +197,8 @@ fn handle_events() -> io::Result<types::Action> {
 fn process_key_press(key_code: KeyCode) -> io::Result<types::Action> {
     match key_code {
         KeyCode::Char('q') => Ok(types::Action::Quit),
+        KeyCode::Char('u') => Ok(types::Action::Undo),
+        KeyCode::Char('r') => Ok(types::Action::Reset),
         KeyCode::Char('w') => Ok(types::Action::Move(types::Direction::Up)),
         KeyCode::Char('s') => Ok(types::Action::Move(types::Direction::Down)),
         KeyCode::Char('a') => Ok(types::Action::Move(types::Direction::Left)),
