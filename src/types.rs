@@ -1,3 +1,4 @@
+use ndarray::prelude::arr2;
 use ratatui::prelude::Position;
 use ratatui::style::Color;
 use ratatui::{buffer::Buffer, layout::Rect, widgets::Widget};
@@ -123,8 +124,200 @@ impl fmt::Display for Level {
     }
 }
 
+#[derive(Debug, Clone)]
+struct CharPixel {
+    char: char,
+    fg: Color,
+    bg: Color,
+}
+
+#[derive(Debug, Clone)]
+struct Sprite {
+    chars: Array2<CharPixel>,
+}
+
+const BOX_ELEMENTS: [char; 32] = [
+    '▀', '▁', '▂', '▃', '▄', '▅', '▆', '▇', '█', '▉', '▊', '▋', '▌', '▍', '▎', '▏',
+    '▐', '░', '▒', '▓', '▔', '▕', '▖', '▗', '▘', '▙', '▚', '▛', '▜', '▝', '▞', '▟',
+];
+
+impl Level {
+    fn get_player_sprite_8_simple() -> Sprite {
+        let background = Color::Rgb(133, 133, 133);
+        let hair1 = Color::Rgb(52, 32, 33);
+        let hair2 = Color::Rgb(72, 42, 43);
+        let skin = Color::Rgb(239, 204, 165);
+        let eye = Color::Rgb(19, 19, 19);
+        let cloth1 = Color::Rgb(8, 25, 61);
+        let cloth2 = Color::Rgb(37, 75, 75);
+        let cloth3 = Color::Rgb(56, 109, 82);
+        #[rustfmt::skip]
+        #[allow(clippy::cast_precision_loss)]
+        let chars = arr2(
+            &[
+                [CharPixel {char: '▀', fg: Color::from_u32(0),      bg: background},
+                 CharPixel {char: '▀', fg: background,      bg: hair1},
+                 CharPixel {char: '▀', fg: hair1,           bg: hair2},
+                 CharPixel {char: '▀', fg: hair1,           bg: hair2},
+                 CharPixel {char: '▀', fg: hair1,           bg: hair2},
+                 CharPixel {char: '▀', fg: hair2,           bg: hair1},
+                 CharPixel {char: '▀', fg: background,      bg: hair1},
+                 CharPixel {char: '▀', fg: background,      bg: background},
+                ],
+                [CharPixel {char: '▀', fg: background,      bg: background},
+                 CharPixel {char: '▀', fg: hair1,           bg: background},
+                 CharPixel {char: '▀', fg: eye,             bg: skin},
+                 CharPixel {char: '▀', fg: skin,            bg: skin},
+                 CharPixel {char: '▀', fg: eye,             bg: skin},
+                 CharPixel {char: '▀', fg: hair1,           bg: skin},
+                 CharPixel {char: '▀', fg: hair1,           bg: background},
+                 CharPixel {char: '▀', fg: Color::from_u32(0),      bg: background},
+                ],
+                [CharPixel {char: '▀', fg: background,      bg: background},
+                 CharPixel {char: '▀', fg: background,      bg: cloth1},
+                 CharPixel {char: '▀', fg: cloth2,          bg: cloth3},
+                 CharPixel {char: '▀', fg: cloth2,          bg: cloth2},
+                 CharPixel {char: '▀', fg: cloth2,          bg: cloth2},
+                 CharPixel {char: '▀', fg: background,      bg: cloth2},
+                 CharPixel {char: '▀', fg: background,      bg: background},
+                 CharPixel {char: '▀', fg: background,      bg: background},
+                ],
+                [CharPixel {char: '▀', fg: background,      bg: background},
+                 CharPixel {char: '▀', fg: cloth1,          bg: background},
+                 CharPixel {char: '▀', fg: cloth1,          bg: cloth1},
+                 CharPixel {char: '▀', fg: cloth3,          bg: cloth3},
+                 CharPixel {char: '▀', fg: cloth2,          bg: cloth3},
+                 CharPixel {char: '▀', fg: cloth2,          bg: cloth3},
+                 CharPixel {char: '▀', fg: cloth2,          bg: cloth3},
+                 CharPixel {char: '▀', fg: background,      bg: background},
+                ],
+
+            ]
+        );
+        Sprite { chars }
+    }
+    fn get_player_sprite_8() -> Sprite {
+        let background = Color::Rgb(133, 133, 133);
+        let hair1 = Color::Rgb(52, 32, 33);
+        let hair2 = Color::Rgb(72, 42, 43);
+        let skin = Color::Rgb(239, 204, 165);
+        let eye = Color::Rgb(19, 19, 19);
+        let cloth1 = Color::Rgb(8, 25, 61);
+        let cloth2 = Color::Rgb(37, 75, 75);
+        let cloth3 = Color::Rgb(56, 109, 82);
+        #[rustfmt::skip]
+        #[allow(clippy::cast_precision_loss)]
+        let chars = arr2(
+            &[
+                [CharPixel {char: '@', fg: Color::from_u32(0),      bg: background},
+                 CharPixel {char: '▅', fg: background,      bg: hair1},
+                 CharPixel {char: '▚', fg: hair1,           bg: hair2},
+                 CharPixel {char: '▚', fg: hair1,           bg: hair2},
+                 CharPixel {char: '▚', fg: hair1,           bg: hair2},
+                 CharPixel {char: '▝', fg: hair2,           bg: hair1},
+                 CharPixel {char: '▀', fg: background,      bg: hair1},
+                 CharPixel {char: '▀', fg: background,      bg: background},
+                ],
+                [CharPixel {char: '▀', fg: background,      bg: background},
+                 CharPixel {char: '▂', fg: background,      bg: hair1},
+                 CharPixel {char: '▀', fg: eye,             bg: skin},
+                 CharPixel {char: '▀', fg: skin,            bg: skin},
+                 CharPixel {char: '▀', fg: eye,             bg: skin},
+                 CharPixel {char: '▂', fg: skin,            bg: hair1},
+                 CharPixel {char: '▀', fg: hair1,           bg: background},
+                 CharPixel {char: '@', fg: Color::from_u32(0),      bg: background},
+                ],
+                [CharPixel {char: '▀', fg: background,      bg: background},
+                 CharPixel {char: '▀', fg: background,      bg: cloth1},
+                 CharPixel {char: '▚', fg: cloth3,          bg: cloth2},
+                 CharPixel {char: '▀', fg: cloth2,          bg: cloth2},
+                 CharPixel {char: '▀', fg: cloth2,          bg: cloth2},
+                 CharPixel {char: '▖', fg: cloth2,          bg: background},
+                 CharPixel {char: '▀', fg: background,      bg: background},
+                 CharPixel {char: '▀', fg: background,      bg: background},
+                ],
+                [CharPixel {char: '▀', fg: background,      bg: background},
+                 CharPixel {char: '▀', fg: cloth1,          bg: background},
+                 CharPixel {char: '▀', fg: cloth1,          bg: cloth1},
+                 CharPixel {char: '▀', fg: cloth3,          bg: cloth3},
+                 CharPixel {char: '▀', fg: cloth2,          bg: cloth3},
+                 CharPixel {char: '▀', fg: cloth2,          bg: cloth3},
+                 CharPixel {char: '▂', fg: cloth3,          bg: cloth2},
+                 CharPixel {char: '▀', fg: background,      bg: background},
+                ],
+
+            ]
+        );
+        Sprite { chars }
+    }
+
+    fn get_player_sprite_6() -> Sprite {
+        let background = Color::Rgb(133, 133, 133);
+        let hair1 = Color::Rgb(52, 32, 33);
+        let hair2 = Color::Rgb(72, 42, 43);
+        let skin = Color::Rgb(239, 204, 165);
+        let cloth1 = Color::Rgb(8, 25, 61);
+        let cloth2 = Color::Rgb(37, 75, 75);
+        let cloth3 = Color::Rgb(56, 109, 82);
+        #[rustfmt::skip]
+        #[allow(clippy::cast_precision_loss)]
+        let chars = arr2(
+            &[
+                [CharPixel {char: '@', fg: Color::from_u32(0),      bg: background},
+                 CharPixel {char: '▅', fg: background,      bg: hair1},
+                 CharPixel {char: '▚', fg: hair1,           bg: hair2},
+                 CharPixel {char: '▝', fg: hair2,           bg: hair1},
+                 CharPixel {char: '▀', fg: background,      bg: hair1},
+                 CharPixel {char: '▀', fg: background,      bg: background},
+                ],
+                [CharPixel {char: '▀', fg: background,      bg: background},
+                 CharPixel {char: '▂', fg: background,      bg: hair1},
+                 CharPixel {char: '▆', fg: skin,            bg: hair1},
+                 CharPixel {char: '▆', fg: skin,            bg: hair1},
+                 CharPixel {char: '▂', fg: skin,            bg: hair1},
+                 CharPixel {char: '▀', fg: hair1,           bg: background},
+                ],
+                [CharPixel {char: '▀', fg: background,      bg: background},
+                 CharPixel {char: '▝', fg: cloth1,          bg: background},
+                 CharPixel {char: '▚', fg: cloth3,          bg: cloth2},
+                 CharPixel {char: '▀', fg: cloth2,          bg: cloth2},
+                 CharPixel {char: '▙', fg: cloth2,          bg: background},
+                 CharPixel {char: '▖', fg: cloth2,      bg: background},
+                ],
+            ]
+        );
+        Sprite { chars }
+    }
+
+    fn get_player_sprite_4() -> Sprite {
+        let background = Color::Rgb(133, 133, 133);
+        let hair1 = Color::Rgb(52, 32, 33);
+        let skin = Color::Rgb(239, 204, 165);
+        let cloth1 = Color::Rgb(8, 25, 61);
+        let cloth2 = Color::Rgb(37, 75, 75);
+        let cloth3 = Color::Rgb(56, 109, 82);
+        #[rustfmt::skip]
+        #[allow(clippy::cast_precision_loss)]
+        let chars = arr2(
+            &[
+                [CharPixel {char: '▝', fg: hair1,           bg: background},
+                 CharPixel {char: '▅', fg: skin,            bg: hair1},
+                 CharPixel {char: '▂', fg: skin,            bg: hair1},
+                 CharPixel {char: '▙', fg: hair1,           bg: background},
+                ],
+                [CharPixel {char: '▝', fg: cloth1,          bg: background},
+                 CharPixel {char: '▚', fg: cloth3,          bg: cloth2},
+                 CharPixel {char: '▀', fg: cloth2,          bg: cloth2},
+                 CharPixel {char: '▖', fg: cloth2,          bg: background},
+                ],
+            ]
+        );
+        Sprite { chars }
+    }
+}
+
 impl Widget for Level {
-    #[allow(clippy::cast_precision_loss, clippy::similar_names)]
+    #[allow(clippy::cast_precision_loss)]
     fn render(self, area: Rect, buf: &mut Buffer) {
         let mut row_pixels;
         let mut row_iter = self.map.outer_iter();
@@ -174,5 +367,84 @@ impl Widget for Level {
                 }
             }
         }
+
+        for (index, elem) in BOX_ELEMENTS.iter().enumerate() {
+            let curs = &mut buf[(index as u16 + area.x, (yi + 1) as u16 + area.y)];
+            curs.set_char(*elem);
+            curs.set_fg(get_color(TolColor::VibRed));
+            curs.set_bg(get_color(TolColor::VibBlue));
+        }
+
+        let start_row = yi + 2;
+        let start_column = 0;
+        let sprite = Level::get_player_sprite_8_simple();
+        for (yi, row) in sprite.chars.outer_iter().enumerate() {
+            for (xi, char_px) in row.iter().enumerate() {
+                let curs = &mut buf[(
+                    (xi + start_column) as u16 + area.x,
+                    (yi + start_row) as u16 + area.y,
+                )];
+                curs.set_char(char_px.char);
+                curs.set_fg(char_px.fg);
+                curs.set_bg(char_px.bg);
+            }
+        }
+
+        let start_row = yi + 2;
+        let start_column = 9;
+        let sprite = Level::get_player_sprite_8();
+        for (yi, row) in sprite.chars.outer_iter().enumerate() {
+            for (xi, char_px) in row.iter().enumerate() {
+                let curs = &mut buf[(
+                    (xi + start_column) as u16 + area.x,
+                    (yi + start_row) as u16 + area.y,
+                )];
+                curs.set_char(char_px.char);
+                curs.set_fg(char_px.fg);
+                curs.set_bg(char_px.bg);
+            }
+        }
+
+        let start_row = yi + 3;
+        let start_column = 18;
+        let sprite = Level::get_player_sprite_6();
+        for (yi, row) in sprite.chars.outer_iter().enumerate() {
+            for (xi, char_px) in row.iter().enumerate() {
+                let curs = &mut buf[(
+                    (xi + start_column) as u16 + area.x,
+                    (yi + start_row) as u16 + area.y,
+                )];
+                curs.set_char(char_px.char);
+                curs.set_fg(char_px.fg);
+                curs.set_bg(char_px.bg);
+            }
+        }
+
+        let start_row = yi + 4;
+        let start_column = 25;
+        let sprite = Level::get_player_sprite_4();
+        for (yi, row) in sprite.chars.outer_iter().enumerate() {
+            for (xi, char_px) in row.iter().enumerate() {
+                let curs = &mut buf[(
+                    (xi + start_column) as u16 + area.x,
+                    (yi + start_row) as u16 + area.y,
+                )];
+                curs.set_char(char_px.char);
+                curs.set_fg(char_px.fg);
+                curs.set_bg(char_px.bg);
+            }
+        }
+
+        let start_row = yi + 1;
+        let start_column = 30;
+        let curs = &mut buf[(
+            (start_column) as u16 + area.x,
+            (yi + start_row) as u16 + area.y,
+        )];
+        curs.set_char('▀');
+        let hair1 = Color::Rgb(52, 32, 33);
+        let cloth2 = Color::Rgb(37, 75, 75);
+        curs.set_fg(hair1);
+        curs.set_bg(cloth2);
     }
 }
