@@ -116,5 +116,5 @@ fn build_color_map() -> HashMap<TolColor, Color> {
 
 pub fn get_color(color: TolColor) -> Color {
     let color_map = COLOR_MAP.get_or_init(build_color_map);
-    color_map.get(&color).unwrap().clone()
+    *color_map.get(&color).unwrap()
 }

@@ -8,3 +8,8 @@ ndarray = "0.16.1"
 crossterm = "0.25"
 ratatui = "0.28.1"
 palette = "0.7.6"
+
+[dev-dependencies.cargo-husky]
+version = "1"
+default-features = false # Disable features which are enabled by default
+features = ["precommit-hook", "run-cargo-fmt", "run-cargo-clippy"]
