@@ -77,8 +77,11 @@ fn main() -> io::Result<()> {
                 break;
             }
             types::Action::Move(direction) => {
-                history.push(level.clone());
-                level = handle_move(&level, direction);
+                if let Some(new_level) = handle_move(&level, direction) {
+                    history.push(level.clone());
+                    level = new_level;
+                }
+
             }
             types::Action::Undo => {
                 if let Some(prev_level) = history.pop() {
@@ -100,7 +103,7 @@ fn main() -> io::Result<()> {
     Ok(())
 }
 
-fn handle_move(prev_level: &types::Level, direction: types::Direction) -> types::Level {
+fn handle_move(prev_level: &types::Level, direction: types::Direction) -> Option<types::Level> {
     // TODO: rework me so I return a new world with the updated move rather than mutating the
     // existing world. This is the first step to supporting UNDO
     let mut player_move = None;
@@ -156,7 +159,10 @@ fn handle_move(prev_level: &types::Level, direction: types::Direction) -> types:
         }
     }
 
-    level
+    if Some(player_move) {
+        None // i/ve tried all this () // None // return None;
+    }
+    Some(level)
 }
 
 fn get_new_coords(
