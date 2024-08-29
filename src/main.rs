@@ -150,10 +150,12 @@ fn handle_move(
     }
 
     // resolve the movement
-    if let Some((index, new_coords)) = player_move.clone() {
+    if let Some((index, new_coords)) = player_move {
         if let types::Entity::Player(ref mut player) = &mut level.entities[index] {
             player.coords = new_coords.clone();
         }
+    } else {
+        return None;
     }
     if let Some((index, new_coords)) = chest_move {
         if let types::Entity::Chest(ref mut chest) = &mut level.entities[index] {
@@ -161,9 +163,6 @@ fn handle_move(
         }
     }
 
-    if player_move.is_none() {
-        return None; // i/ve tried all this () // None // return None;
-    }
     Some(level)
 }
 
