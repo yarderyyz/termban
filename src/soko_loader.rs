@@ -19,7 +19,7 @@
  * a newline and starting with a level identifier.
  */
 
-use crate::types::{Ball, Coordinate, Entity, Level, Player, Tile};
+use crate::types::{Coordinate, Entity, Level, Player, SokoBox, Tile};
 use ndarray::Array2;
 
 #[derive(Debug)]
@@ -27,9 +27,9 @@ enum Token {
     Text(String),
     Wall,
     Player,
-    Ball,
+    SokoBox,
     Goal,
-    BallGoal,
+    SokoBoxGoal,
     PlayerGoal,
     Empty,
     NewLine,
@@ -55,9 +55,9 @@ fn tokenize(contents: &str) -> Option<Tokens> {
             match ch {
                 '#' => tokens.push(Token::Wall),
                 '@' => tokens.push(Token::Player),
-                '$' => tokens.push(Token::Ball),
+                '$' => tokens.push(Token::SokoBox),
                 '.' => tokens.push(Token::Goal),
-                '*' => tokens.push(Token::BallGoal),
+                '*' => tokens.push(Token::SokoBoxGoal),
                 '+' => tokens.push(Token::PlayerGoal),
                 ' ' => tokens.push(Token::Empty),
                 _ => return None,
@@ -119,14 +119,14 @@ pub fn load_level(contents: &str) -> Result<Level, String> {
                     Token::Goal => {
                         map[[row, col]] = Tile::Goal;
                     }
-                    Token::Ball => {
-                        entities.push(Entity::Ball(Ball {
+                    Token::SokoBox => {
+                        entities.push(Entity::SokoBox(SokoBox {
                             coords: Coordinate { x: col, y: row },
                         }));
                     }
-                    Token::BallGoal => {
+                    Token::SokoBoxGoal => {
                         map[[row, col]] = Tile::Goal;
-                        entities.push(Entity::Ball(Ball {
+                        entities.push(Entity::SokoBox(SokoBox {
                             coords: Coordinate { x: col, y: row },
                         }));
                     }

@@ -121,23 +121,23 @@ fn handle_move(prev_level: &types::Level, direction: types::Direction) -> types:
         }
     }
 
-    let mut ball_move = None;
+    let mut soko_box_move = None;
     if let Some((_, player_coords)) = player_move.clone() {
         for (index, entity) in level.entities.iter().enumerate() {
-            if let types::Entity::Ball(ball) = entity {
-                // if there is a ball where the player wants to move see if we can
+            if let types::Entity::SokoBox(soko_box) = entity {
+                // if there is a soko_box where the player wants to move see if we can
                 // push it.
-                if ball.coords == player_coords.clone() {
-                    let new_coord = get_new_coords(ball.coords.clone(), &direction);
+                if soko_box.coords == player_coords.clone() {
+                    let new_coord = get_new_coords(soko_box.coords.clone(), &direction);
 
                     if level.is_tile_occupied(&new_coord) {
                         // if the tile we are trying to move too is occupied both moves are
                         // invalid.
-                        ball_move = None;
+                        soko_box_move = None;
                         player_move = None;
                     } else {
-                        // otherwise move the ball
-                        ball_move = Some((index, new_coord.clone()));
+                        // otherwise move the soko_box
+                        soko_box_move = Some((index, new_coord.clone()));
                     }
                 }
             }
@@ -150,9 +150,9 @@ fn handle_move(prev_level: &types::Level, direction: types::Direction) -> types:
             player.coords = new_coords.clone();
         }
     }
-    if let Some((index, new_coords)) = ball_move {
-        if let types::Entity::Ball(ref mut ball) = &mut level.entities[index] {
-            ball.coords = new_coords.clone();
+    if let Some((index, new_coords)) = soko_box_move {
+        if let types::Entity::SokoBox(ref mut soko_box) = &mut level.entities[index] {
+            soko_box.coords = new_coords.clone();
         }
     }
 
