@@ -19,7 +19,7 @@
  * a newline and starting with a level identifier.
  */
 
-use crate::types::{Chest, Coordinate, Entity, Level, Player, Tile};
+use crate::types::{Coordinate, Entity, Level, Player, SokoBox, Tile};
 use ndarray::Array2;
 
 #[derive(Debug)]
@@ -27,10 +27,10 @@ enum Token {
     Text(String),
     Wall,
     Player,
-    Chest,
+    SokoBox,
     Goal,
-    ChestGoal,
-    PlayerGoal,
+    SokoBoxAndGoal,
+    PlayerAndGoal,
     Empty,
     NewLine,
 }
@@ -55,10 +55,10 @@ fn tokenize(contents: &str) -> Option<Tokens> {
             match ch {
                 '#' => tokens.push(Token::Wall),
                 '@' => tokens.push(Token::Player),
-                '$' => tokens.push(Token::Chest),
+                '$' => tokens.push(Token::SokoBox),
                 '.' => tokens.push(Token::Goal),
-                '*' => tokens.push(Token::ChestGoal),
-                '+' => tokens.push(Token::PlayerGoal),
+                '*' => tokens.push(Token::SokoBoxAndGoal),
+                '+' => tokens.push(Token::PlayerAndGoal),
                 ' ' => tokens.push(Token::Empty),
                 _ => return None,
             }
@@ -119,18 +119,18 @@ pub fn load_level(contents: &str) -> Result<Level, String> {
                     Token::Goal => {
                         map[[row, col]] = Tile::Goal;
                     }
-                    Token::Chest => {
-                        entities.push(Entity::Chest(Chest {
+                    Token::SokoBox => {
+                        entities.push(Entity::SokoBox(SokoBox {
                             coords: Coordinate { x: col, y: row },
                         }));
                     }
-                    Token::ChestGoal => {
+                    Token::SokoBoxAndGoal => {
                         map[[row, col]] = Tile::Goal;
-                        entities.push(Entity::Chest(Chest {
+                        entities.push(Entity::SokoBox(SokoBox {
                             coords: Coordinate { x: col, y: row },
                         }));
                     }
-                    Token::PlayerGoal => {
+                    Token::PlayerAndGoal => {
                         map[[row, col]] = Tile::Goal;
                         entities.push(Entity::Player(Player {
                             coords: Coordinate { x: col, y: row },

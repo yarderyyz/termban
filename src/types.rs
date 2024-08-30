@@ -41,27 +41,27 @@ pub struct Player {
 }
 
 #[derive(Debug, Clone)]
-pub struct Chest {
+pub struct SokoBox {
     pub coords: Coordinate,
 }
 
 #[derive(Debug, Clone)]
 pub enum Entity {
     Player(Player),
-    Chest(Chest),
+    SokoBox(SokoBox),
 }
 
 impl Entity {
     pub fn get_coords(&self) -> Coordinate {
         match self {
             Entity::Player(player) => player.coords.clone(),
-            Entity::Chest(chest) => chest.coords.clone(),
+            Entity::SokoBox(soko_box) => soko_box.coords.clone(),
         }
     }
     pub fn color(&self) -> Color {
         match self {
-            Entity::Player(_) => get_color(TolColor::VibMagenta),
-            Entity::Chest(_) => get_color(TolColor::VibCyan),
+            Entity::Player(_) => get_color(TolColor::PurRed),
+            Entity::SokoBox(_) => get_color(TolColor::BriBlue),
         }
     }
 }
@@ -94,9 +94,9 @@ impl Level {
 impl Tile {
     pub fn color(&self) -> Option<Color> {
         match self {
-            Tile::Wall => Some(get_color(TolColor::VibTeal)),
-            Tile::Goal => Some(get_color(TolColor::VibRed)),
-            Tile::Empty => Some(Color::Rgb(41, 19, 10)),
+            Tile::Wall => Some(get_color(TolColor::LigLightBlue)),
+            Tile::Goal => Some(get_color(TolColor::BriGrey)),
+            Tile::Empty => Some(get_color(TolColor::CstLigBlue)),
         }
     }
 }

@@ -126,23 +126,23 @@ fn handle_move(
         }
     }
 
-    let mut chest_move = None;
+    let mut soko_box_move = None;
     if let Some((_, player_coords)) = player_move.clone() {
         for (index, entity) in level.entities.iter().enumerate() {
-            if let types::Entity::Chest(chest) = entity {
-                // if there is a chest where the player wants to move see if we can
+            if let types::Entity::SokoBox(soko_box) = entity {
+                // if there is a soko_box where the player wants to move see if we can
                 // push it.
-                if chest.coords == player_coords.clone() {
-                    let new_coord = get_new_coords(chest.coords.clone(), &direction);
+                if soko_box.coords == player_coords.clone() {
+                    let new_coord = get_new_coords(soko_box.coords.clone(), &direction);
 
                     if level.is_tile_occupied(&new_coord) {
                         // if the tile we are trying to move too is occupied both moves are
                         // invalid.
-                        chest_move = None;
+                        soko_box_move = None;
                         player_move = None;
                     } else {
-                        // otherwise move the chest
-                        chest_move = Some((index, new_coord.clone()));
+                        // otherwise move the soko_box
+                        soko_box_move = Some((index, new_coord.clone()));
                     }
                 }
             }
@@ -157,9 +157,9 @@ fn handle_move(
     } else {
         return None;
     }
-    if let Some((index, new_coords)) = chest_move {
-        if let types::Entity::Chest(ref mut chest) = &mut level.entities[index] {
-            chest.coords = new_coords.clone();
+    if let Some((index, new_coords)) = soko_box_move {
+        if let types::Entity::SokoBox(ref mut soko_box) = &mut level.entities[index] {
+            soko_box.coords = new_coords.clone();
         }
     }
 

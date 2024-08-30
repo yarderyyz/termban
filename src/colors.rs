@@ -58,6 +58,15 @@ pub enum TolColor {
     LigPink,
     LigPaleGrey,
 
+    PurRed,
+    PurGreen,
+    PurBlue,
+    PurYellow,
+    PurCyan,
+    PurMagenta,
+
+    CstLigBlue,
+
     BadData,
 }
 
@@ -107,6 +116,17 @@ fn build_color_map() -> HashMap<TolColor, Color> {
     color_map.insert(TolColor::LigOrange, Color::Rgb(238, 136, 102));
     color_map.insert(TolColor::LigPink, Color::Rgb(255, 170, 187));
     color_map.insert(TolColor::LigPaleGrey, Color::Rgb(221, 221, 221));
+
+    // Simple colors (Pure)
+    color_map.insert(TolColor::PurRed, Color::Rgb(255, 0, 0));
+    color_map.insert(TolColor::PurBlue, Color::Rgb(0, 255, 0));
+    color_map.insert(TolColor::PurGreen, Color::Rgb(0, 0, 255));
+    color_map.insert(TolColor::PurYellow, Color::Rgb(255, 255, 0));
+    color_map.insert(TolColor::PurCyan, Color::Rgb(0, 255, 255));
+    color_map.insert(TolColor::PurMagenta, Color::Rgb(255, 0, 255));
+
+    // Custom Colors, not associated with any known palette
+    color_map.insert(TolColor::CstLigBlue, Color::Rgb(222, 255, 255));
 
     // Bad data color
     color_map.insert(TolColor::BadData, Color::Rgb(255, 238, 153));
