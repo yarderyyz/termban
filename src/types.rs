@@ -41,27 +41,27 @@ pub struct Player {
 }
 
 #[derive(Debug, Clone)]
-pub struct Chest {
+pub struct Ball {
     pub coords: Coordinate,
 }
 
 #[derive(Debug, Clone)]
 pub enum Entity {
     Player(Player),
-    Chest(Chest),
+    Ball(Ball),
 }
 
 impl Entity {
     pub fn get_coords(&self) -> Coordinate {
         match self {
             Entity::Player(player) => player.coords.clone(),
-            Entity::Chest(chest) => chest.coords.clone(),
+            Entity::Ball(ball) => ball.coords.clone(),
         }
     }
     pub fn color(&self) -> Color {
         match self {
             Entity::Player(_) => get_color(TolColor::VibMagenta),
-            Entity::Chest(_) => get_color(TolColor::VibCyan),
+            Entity::Ball(_) => get_color(TolColor::VibCyan),
         }
     }
 }
