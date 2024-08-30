@@ -3,6 +3,7 @@ use ndarray::Array2;
 use ratatui::style::Color;
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct CharPixel {
     char: char,
     fg: Color,
@@ -10,15 +11,18 @@ struct CharPixel {
 }
 
 #[derive(Debug, Clone)]
-struct Sprite {
+#[allow(dead_code)]
+pub struct Sprite {
     chars: Array2<CharPixel>,
 }
 
+#[allow(dead_code)]
 const BOX_ELEMENTS: [char; 32] = [
     '▀', '▁', '▂', '▃', '▄', '▅', '▆', '▇', '█', '▉', '▊', '▋', '▌', '▍', '▎', '▏',
     '▐', '░', '▒', '▓', '▔', '▕', '▖', '▗', '▘', '▙', '▚', '▛', '▜', '▝', '▞', '▟',
 ];
 
+#[allow(dead_code)]
 pub fn get_player_sprite_8_simple() -> Sprite {
     let background = Color::Rgb(133, 133, 133);
     let hair1 = Color::Rgb(52, 32, 33);
@@ -74,6 +78,7 @@ pub fn get_player_sprite_8_simple() -> Sprite {
     Sprite { chars }
 }
 
+#[allow(dead_code)]
 pub fn get_player_sprite_8() -> Sprite {
     let background = Color::Rgb(133, 133, 133);
     let hair1 = Color::Rgb(52, 32, 33);
@@ -132,6 +137,7 @@ pub fn get_player_sprite_8() -> Sprite {
     Sprite { chars }
 }
 
+#[allow(dead_code)]
 pub fn get_player_sprite_6() -> Sprite {
     let background = Color::Rgb(133, 133, 133);
     let hair1 = Color::Rgb(52, 32, 33);
@@ -170,6 +176,7 @@ pub fn get_player_sprite_6() -> Sprite {
     Sprite { chars }
 }
 
+#[allow(dead_code)]
 pub fn get_player_sprite_4() -> Sprite {
     let background = Color::Rgb(133, 133, 133);
     let hair1 = Color::Rgb(52, 32, 33);

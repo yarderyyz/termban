@@ -70,7 +70,8 @@ pub struct World {
     pub name: String,
     pub board: Board,
     pub entities: Vec<Entity>,
-    // pub camera_position: Coordinate, // TODO: should I be on world or GameWindow for now?
+    #[allow(dead_code)]
+    pub camera_position: Coordinate, // TODO: should I be on world or GameWindow for now?
 }
 
 impl World {
