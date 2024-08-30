@@ -60,7 +60,7 @@ impl Entity {
     }
     pub fn color(&self) -> Color {
         match self {
-            Entity::Player(_) => get_color(TolColor::VibMagenta),
+            Entity::Player(_) => Color::Rgb(255, 0, 0),
             Entity::Ball(_) => get_color(TolColor::BriBlue),
         }
     }
