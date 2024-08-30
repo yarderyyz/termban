@@ -19,7 +19,7 @@
  * a newline and starting with a level identifier.
  */
 
-use crate::types::{Coordinate, Entity, Level, Player, SokoBox, Tile};
+use crate::types::{Coordinate, Entity, Player, SokoBox, Tile, World};
 use ndarray::Array2;
 
 #[derive(Debug)]
@@ -90,7 +90,7 @@ fn get_board_dimensions(tokens: &[Token]) -> (usize, usize) {
     (ncols, nrows)
 }
 
-pub fn load_level(contents: &str) -> Result<Level, String> {
+pub fn load_level(contents: &str) -> Result<World, String> {
     let tokens = tokenize(contents);
     if tokens.is_none() {
         return Err("Level failed to load".to_string());
@@ -102,38 +102,38 @@ pub fn load_level(contents: &str) -> Result<Level, String> {
             let (rows, cols) = get_board_dimensions(level_toks);
 
             // Create an initial board with default values (e.g., all `Wall`)
-            let mut map = Array2::from_elem((cols, rows), Tile::Empty);
+            let mut board = Array2::from_elem((cols, rows), Tile::Empty);
             let mut entities = Vec::new();
 
             let (mut col, mut row): (usize, usize) = (0, 0);
             for tok in level_toks.iter() {
                 match tok {
                     Token::Wall => {
-                        map[[row, col]] = Tile::Wall;
+                        board[[row, col]] = Tile::Wall;
                     }
                     Token::Player => {
                         entities.push(Entity::Player(Player {
-                            coords: Coordinate { x: col, y: row },
+                            position: Coordinate { x: col, y: row },
                         }));
                     }
                     Token::Goal => {
-                        map[[row, col]] = Tile::Goal;
+                        board[[row, col]] = Tile::Goal;
                     }
                     Token::SokoBox => {
                         entities.push(Entity::SokoBox(SokoBox {
-                            coords: Coordinate { x: col, y: row },
+                            position: Coordinate { x: col, y: row },
                         }));
                     }
                     Token::SokoBoxAndGoal => {
-                        map[[row, col]] = Tile::Goal;
+                        board[[row, col]] = Tile::Goal;
                         entities.push(Entity::SokoBox(SokoBox {
-                            coords: Coordinate { x: col, y: row },
+                            position: Coordinate { x: col, y: row },
                         }));
                     }
                     Token::PlayerAndGoal => {
-                        map[[row, col]] = Tile::Goal;
+                        board[[row, col]] = Tile::Goal;
                         entities.push(Entity::Player(Player {
-                            coords: Coordinate { x: col, y: row },
+                            position: Coordinate { x: col, y: row },
                         }));
                     }
                     Token::NewLine => {
@@ -147,10 +147,11 @@ pub fn load_level(contents: &str) -> Result<Level, String> {
             }
 
             // Create an instance of Level
-            let level = Level {
+            let level = World {
                 name: title.to_string(),
-                map,
+                board,
                 entities,
+                // camera_position: Coordinate { x: 0, y: 0 },
             };
             Ok(level)
         }
