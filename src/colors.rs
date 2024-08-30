@@ -125,7 +125,7 @@ fn build_color_map() -> HashMap<TolColor, Color> {
     color_map.insert(TolColor::PurCyan, Color::Rgb(0, 255, 255));
     color_map.insert(TolColor::PurMagenta, Color::Rgb(255, 0, 255));
 
-    // Custom Colors
+    // Custom Colors, not associated with any known palette
     color_map.insert(TolColor::CstLigBlue, Color::Rgb(222, 255, 255));
 
     // Bad data color
