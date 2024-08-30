@@ -203,13 +203,25 @@ fn handle_events() -> io::Result<types::Action> {
 
 fn process_key_press(key_code: KeyCode) -> io::Result<types::Action> {
     match key_code {
-        KeyCode::Char('q') => Ok(types::Action::Quit),
-        KeyCode::Char('u') => Ok(types::Action::Undo),
+        // Game state
+        KeyCode::Esc => Ok(types::Action::Quit),
+        KeyCode::Char('z') | KeyCode::Char('u') => Ok(types::Action::Undo),
         KeyCode::Char('r') => Ok(types::Action::Reset),
-        KeyCode::Char('w') => Ok(types::Action::Move(types::Direction::Up)),
-        KeyCode::Char('s') => Ok(types::Action::Move(types::Direction::Down)),
-        KeyCode::Char('a') => Ok(types::Action::Move(types::Direction::Left)),
-        KeyCode::Char('d') => Ok(types::Action::Move(types::Direction::Right)),
+
+        // Movement
+        KeyCode::Up | KeyCode::Char('w') => {
+            Ok(types::Action::Move(types::Direction::Up))
+        }
+        KeyCode::Left | KeyCode::Char('a') => {
+            Ok(types::Action::Move(types::Direction::Left))
+        }
+        KeyCode::Down | KeyCode::Char('s') => {
+            Ok(types::Action::Move(types::Direction::Down))
+        }
+        KeyCode::Right | KeyCode::Char('d') => {
+            Ok(types::Action::Move(types::Direction::Right))
+        }
+
         _ => Ok(types::Action::None),
     }
 }
