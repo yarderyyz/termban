@@ -29,8 +29,8 @@ enum Token {
     Player,
     SokoBox,
     Goal,
-    SokoBoxGoal,
-    PlayerGoal,
+    SokoBoxAndGoal,
+    PlayerAndGoal,
     Empty,
     NewLine,
 }
@@ -57,8 +57,8 @@ fn tokenize(contents: &str) -> Option<Tokens> {
                 '@' => tokens.push(Token::Player),
                 '$' => tokens.push(Token::SokoBox),
                 '.' => tokens.push(Token::Goal),
-                '*' => tokens.push(Token::SokoBoxGoal),
-                '+' => tokens.push(Token::PlayerGoal),
+                '*' => tokens.push(Token::SokoBoxAndGoal),
+                '+' => tokens.push(Token::PlayerAndGoal),
                 ' ' => tokens.push(Token::Empty),
                 _ => return None,
             }
@@ -124,13 +124,13 @@ pub fn load_level(contents: &str) -> Result<Level, String> {
                             coords: Coordinate { x: col, y: row },
                         }));
                     }
-                    Token::SokoBoxGoal => {
+                    Token::SokoBoxAndGoal => {
                         map[[row, col]] = Tile::Goal;
                         entities.push(Entity::SokoBox(SokoBox {
                             coords: Coordinate { x: col, y: row },
                         }));
                     }
-                    Token::PlayerGoal => {
+                    Token::PlayerAndGoal => {
                         map[[row, col]] = Tile::Goal;
                         entities.push(Entity::Player(Player {
                             coords: Coordinate { x: col, y: row },
