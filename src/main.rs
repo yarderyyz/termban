@@ -77,8 +77,10 @@ fn main() -> io::Result<()> {
                 break;
             }
             types::Action::Move(direction) => {
-                history.push(level.clone());
-                level = handle_move(&level, direction);
+                if let Some(new_level) = handle_move(&level, direction) {
+                    history.push(level.clone());
+                    level = new_level;
+                }
             }
             types::Action::Undo => {
                 if let Some(prev_level) = history.pop() {
@@ -100,7 +102,10 @@ fn main() -> io::Result<()> {
     Ok(())
 }
 
-fn handle_move(prev_level: &types::Level, direction: types::Direction) -> types::Level {
+fn handle_move(
+    prev_level: &types::Level,
+    direction: types::Direction,
+) -> Option<types::Level> {
     // TODO: rework me so I return a new world with the updated move rather than mutating the
     // existing world. This is the first step to supporting UNDO
     let mut player_move = None;
@@ -149,6 +154,8 @@ fn handle_move(prev_level: &types::Level, direction: types::Direction) -> types:
         if let types::Entity::Player(ref mut player) = &mut level.entities[index] {
             player.coords = new_coords.clone();
         }
+    } else {
+        return None;
     }
     if let Some((index, new_coords)) = chest_move {
         if let types::Entity::Chest(ref mut chest) = &mut level.entities[index] {
@@ -156,7 +163,7 @@ fn handle_move(prev_level: &types::Level, direction: types::Direction) -> types:
         }
     }
 
-    level
+    Some(level)
 }
 
 fn get_new_coords(
