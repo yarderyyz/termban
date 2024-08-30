@@ -89,6 +89,19 @@ impl Level {
             }
         }
     }
+
+    pub fn is_sokoban_solved(&self) -> bool {
+        for entity in &self.entities {
+            if let Entity::SokoBox(soko_box) = entity {
+                let _t = &self.map[[soko_box.coords.y, soko_box.coords.x]];
+                if let Tile::Goal = _t {
+                } else {
+                    return false;
+                }
+            }
+        }
+        true
+    }
 }
 
 impl Tile {

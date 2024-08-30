@@ -80,6 +80,9 @@ fn main() -> io::Result<()> {
                 if let Some(new_level) = handle_move(&level, direction) {
                     history.push(level.clone());
                     level = new_level;
+                    if level.is_sokoban_solved() {
+                        // println!("Game is solved!") // Uncomment to prove this function works
+                    }
                 }
             }
             types::Action::Undo => {
