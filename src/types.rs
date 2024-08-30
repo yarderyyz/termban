@@ -60,7 +60,7 @@ impl Entity {
     }
     pub fn color(&self) -> Color {
         match self {
-            Entity::Player(_) => Color::Rgb(255, 0, 0),
+            Entity::Player(_) => get_color(TolColor::PurRed),
             Entity::SokoBox(_) => get_color(TolColor::BriBlue),
         }
     }
@@ -96,7 +96,7 @@ impl Tile {
         match self {
             Tile::Wall => Some(get_color(TolColor::LigLightBlue)),
             Tile::Goal => Some(get_color(TolColor::BriGrey)),
-            Tile::Empty => Some(Color::Rgb(222, 255, 255)),
+            Tile::Empty => Some(get_color(TolColor::CstLigBlue)),
         }
     }
 }
