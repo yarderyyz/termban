@@ -42,7 +42,10 @@ fn main() -> io::Result<()> {
 
     let title = world.name.clone();
 
-    let mut game_window = types::GameWindow { world };
+    let mut game_window = types::GameWindow {
+        world,
+        zoom: types::Zoom::Far,
+    };
 
     loop {
         let mut debug: Vec<String> = Vec::new();
@@ -97,6 +100,9 @@ fn main() -> io::Result<()> {
                     game_window.world = prev_level.clone();
                 }
             }
+            types::Action::ZoomClose => game_window.zoom = types::Zoom::Close,
+            types::Action::ZoomMiddle => game_window.zoom = types::Zoom::Middle,
+            types::Action::ZoomFar => game_window.zoom = types::Zoom::Far,
             types::Action::None => {}
         }
     }
@@ -224,6 +230,11 @@ fn process_key_press(key_code: KeyCode) -> io::Result<types::Action> {
         KeyCode::Right | KeyCode::Char('d') => {
             Ok(types::Action::Move(types::Direction::Right))
         }
+
+        // View
+        KeyCode::Char('1') => Ok(types::Action::ZoomClose),
+        KeyCode::Char('2') => Ok(types::Action::ZoomMiddle),
+        KeyCode::Char('3') => Ok(types::Action::ZoomFar),
 
         _ => Ok(types::Action::None),
     }

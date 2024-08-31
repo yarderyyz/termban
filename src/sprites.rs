@@ -4,16 +4,16 @@ use ratatui::style::Color;
 
 #[derive(Debug, Clone)]
 #[allow(dead_code)]
-struct CharPixel {
-    char: char,
-    fg: Color,
-    bg: Color,
+pub struct CharPixel {
+    pub char: char,
+    pub fg: Color,
+    pub bg: Color,
 }
 
 #[derive(Debug, Clone)]
 #[allow(dead_code)]
 pub struct Sprite {
-    chars: Array2<CharPixel>,
+    pub chars: Array2<CharPixel>,
 }
 
 #[allow(dead_code)]
