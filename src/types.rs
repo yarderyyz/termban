@@ -105,25 +105,102 @@ pub struct GameWindow {
     pub world: World,
 }
 
-// TODO: idea's for better name here?
-struct UnicodePixels {
-    colors: Array2<Option<Color>>,
-    chars: Array2<Option<char>>,
+#[derive(Debug, Clone)]
+pub struct GlyphCell {
+    glyph: char,
+    fg: Option<Color>,
+    bg: Option<Color>,
+}
+impl GlyphCell {
+    pub fn new() -> GlyphCell {
+        GlyphCell {
+            glyph: ' ',
+            fg: None,
+            bg: None,
+        }
+    }
 }
 
-impl UnicodePixels {
-    pub fn new(
-        colors: Array2<Option<Color>>,
-        chars: Array2<Option<char>>,
-    ) -> UnicodePixels {
-        UnicodePixels { colors, chars }
+type GlyphCells = Array2<GlyphCell>;
+
+#[derive(Debug, Clone)]
+enum RenderItem {
+    Board(Board),
+    Entity(Entity),
+}
+
+#[derive(Debug, Clone)]
+struct RenderNode {
+    item: RenderItem,
+    children: Option<Vec<RenderNode>>,
+}
+
+#[derive(Debug, Clone)]
+struct RenderGraph {
+    root: RenderNode,
+}
+
+fn generate_render_graph(world: &World) -> RenderGraph {
+    let children = Some(
+        world
+            .entities
+            .iter()
+            .map(|ent| RenderNode {
+                item: RenderItem::Entity(ent.clone()),
+                children: None,
+            })
+            .collect(),
+    );
+
+    RenderGraph {
+        root: RenderNode {
+            item: RenderItem::Board(world.board.clone()),
+            children,
+        },
+    }
+}
+
+fn glyphize_node(node: RenderNode, glyph_buffer: GlyphCells) -> GlyphCells {
+    let glyph_buffer = match node.item {
+        RenderItem::Board(board) => {
+            // TODO: finish debugging
+            let mut glyph_buffer = glyph_buffer.clone();
+
+            for (yi, row) in board.outer_iter().enumerate() {
+                for (xi, tile) in row.iter().enumerate() {
+                    if xi % 2 == 0 {
+                        glyph_buffer[[xi, yi]].glyph = '▀';
+                        glyph_buffer[[xi, yi]].fg = tile.color();
+                        // glyph_buffer[[xi, yi]].fg = Some(Color::Rgb(255, 0, 0));
+                    } else {
+                        glyph_buffer[[xi, yi]].glyph = '▀';
+                        glyph_buffer[[xi, yi]].bg = tile.color();
+                        // glyph_buffer[[xi, yi]].bg = Some(Color::Rgb(0, 0, 255));
+                    }
+                }
+            }
+            glyph_buffer
+        }
+        RenderItem::Entity(entity) => {
+            // TODO: This logic is wrong
+            let mut glyph_buffer = glyph_buffer.clone();
+            let pos = entity.get_position();
+            glyph_buffer[[pos.y, pos.x]].fg = Some(entity.color());
+            glyph_buffer
+        }
+    };
+    if let Some(children) = node.children {
+        children
+            .into_iter()
+            .fold(glyph_buffer, |buffer, child| glyphize_node(child, buffer))
+    } else {
+        glyph_buffer
     }
 }
 
 /// Renders the current state of the game world into a pixel color array and character array
 ///
-/// This function takes the current game world (`graph`) it is currently really chince and
-/// just uses the world rather than generating a render graph.
+///
 ///
 /// # Parameters
 ///
@@ -136,47 +213,35 @@ impl UnicodePixels {
 ///
 /// # Examples
 ///
-fn render_graph(graph: &World, area: Rect) -> UnicodePixels {
-    let _ = area.width;
-    let _ = area.height;
+fn glyphize_graph(graph: RenderGraph, area: Rect) -> GlyphCells {
+    let glyph_buffer = GlyphCells::from_elem(
+        (area.height as usize, area.width as usize),
+        GlyphCell::new(),
+    );
 
-    let mut colors = graph.board.map(|tile| tile.color());
-    let ceil_half_x = (colors.shape()[0] + 1) / 2;
-    let chars_shape = (ceil_half_x, colors.shape()[1]);
-    let chars = Array2::from_elem(chars_shape, Some('▀'));
-    for entity in &graph.entities {
-        let pos = entity.get_position();
-        colors[[pos.y, pos.x]] = Some(entity.color());
+    glyphize_node(graph.root, glyph_buffer)
+}
+
+pub fn blit(glyph_cells: GlyphCells, area: Rect, buf: &mut Buffer) {
+    for (yi, row) in glyph_cells.outer_iter().enumerate() {
+        for (xi, cell) in row.iter().enumerate() {
+            let curs = &mut buf[(xi as u16 + area.x, yi as u16 + area.y)];
+            curs.set_char(cell.glyph);
+            if let Some(fg) = cell.fg {
+                curs.set_fg(fg);
+            }
+            if let Some(bg) = cell.bg {
+                curs.set_fg(bg);
+            }
+        }
     }
-    UnicodePixels::new(colors, chars)
 }
 
 impl Widget for GameWindow {
     #[allow(clippy::cast_precision_loss)]
     fn render(self, area: Rect, buf: &mut Buffer) {
-        let graph = &self.world;
-        let screen = render_graph(graph, area);
-
-        for (yi, row) in screen.colors.outer_iter().enumerate() {
-            for (xi, color) in row.iter().enumerate() {
-                let curs = &mut buf[(xi as u16 + area.x, (yi / 2) as u16 + area.y)];
-                if yi % 2 == 0 {
-                    if let Some(color) = color {
-                        curs.set_fg(*color);
-                    }
-                } else if let Some(color) = color {
-                    curs.set_bg(*color);
-                }
-            }
-        }
-
-        for (yi, row) in screen.chars.outer_iter().enumerate() {
-            for (xi, char) in row.iter().enumerate() {
-                let curs = &mut buf[(xi as u16 + area.x, yi as u16 + area.y)];
-                if let Some(char) = char {
-                    curs.set_char(*char);
-                }
-            }
-        }
+        let graph = generate_render_graph(&self.world);
+        let glyph_buffer = glyphize_graph(graph, area);
+        blit(glyph_buffer, area, buf);
     }
 }
