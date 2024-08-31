@@ -52,6 +52,7 @@ fn main() -> io::Result<()> {
                 debug.push(format!("{:?}", player.position.clone()));
             }
         }
+        debug.push(format!("{:?}", &game_window.world.board.dim()));
 
         terminal.draw(|frame: &mut Frame| {
             let main_area = frame.area();

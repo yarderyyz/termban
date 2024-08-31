@@ -163,29 +163,28 @@ fn generate_render_graph(world: &World) -> RenderGraph {
 fn glyphize_node(node: RenderNode, glyph_buffer: GlyphCells) -> GlyphCells {
     let glyph_buffer = match node.item {
         RenderItem::Board(board) => {
-            // TODO: finish debugging
             let mut glyph_buffer = glyph_buffer.clone();
 
-            for (yi, row) in board.outer_iter().enumerate() {
+            for (yi, row) in board.rows().into_iter().enumerate() {
                 for (xi, tile) in row.iter().enumerate() {
-                    if xi % 2 == 0 {
-                        glyph_buffer[[xi, yi]].glyph = '▀';
-                        glyph_buffer[[xi, yi]].fg = tile.color();
-                        // glyph_buffer[[xi, yi]].fg = Some(Color::Rgb(255, 0, 0));
+                    if yi % 2 == 0 {
+                        glyph_buffer[[yi / 2, xi]].glyph = '▀';
+                        glyph_buffer[[yi / 2, xi]].fg = tile.color();
                     } else {
-                        glyph_buffer[[xi, yi]].glyph = '▀';
-                        glyph_buffer[[xi, yi]].bg = tile.color();
-                        // glyph_buffer[[xi, yi]].bg = Some(Color::Rgb(0, 0, 255));
+                        glyph_buffer[[yi / 2, xi]].bg = tile.color();
                     }
                 }
             }
             glyph_buffer
         }
         RenderItem::Entity(entity) => {
-            // TODO: This logic is wrong
             let mut glyph_buffer = glyph_buffer.clone();
             let pos = entity.get_position();
-            glyph_buffer[[pos.y, pos.x]].fg = Some(entity.color());
+            if pos.y % 2 == 0 {
+                glyph_buffer[[pos.y / 2, pos.x]].fg = Some(entity.color());
+            } else {
+                glyph_buffer[[pos.y / 2, pos.x]].bg = Some(entity.color());
+            }
             glyph_buffer
         }
     };
@@ -222,26 +221,23 @@ fn glyphize_graph(graph: RenderGraph, area: Rect) -> GlyphCells {
     glyphize_node(graph.root, glyph_buffer)
 }
 
-pub fn blit(glyph_cells: GlyphCells, area: Rect, buf: &mut Buffer) {
-    for (yi, row) in glyph_cells.outer_iter().enumerate() {
-        for (xi, cell) in row.iter().enumerate() {
-            let curs = &mut buf[(xi as u16 + area.x, yi as u16 + area.y)];
-            curs.set_char(cell.glyph);
-            if let Some(fg) = cell.fg {
-                curs.set_fg(fg);
-            }
-            if let Some(bg) = cell.bg {
-                curs.set_fg(bg);
-            }
-        }
-    }
-}
-
 impl Widget for GameWindow {
     #[allow(clippy::cast_precision_loss)]
     fn render(self, area: Rect, buf: &mut Buffer) {
         let graph = generate_render_graph(&self.world);
         let glyph_buffer = glyphize_graph(graph, area);
-        blit(glyph_buffer, area, buf);
+
+        for (yi, row) in glyph_buffer.rows().into_iter().enumerate() {
+            for (xi, cell) in row.iter().enumerate() {
+                let curs = &mut buf[(xi as u16 + area.x, yi as u16 + area.y)];
+                curs.set_char(cell.glyph);
+                if let Some(fg) = cell.fg {
+                    curs.set_fg(fg);
+                }
+                if let Some(bg) = cell.bg {
+                    curs.set_bg(bg);
+                }
+            }
+        }
     }
 }

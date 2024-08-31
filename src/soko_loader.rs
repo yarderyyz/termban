@@ -69,8 +69,8 @@ fn tokenize(contents: &str) -> Option<Tokens> {
 }
 
 fn get_board_dimensions(tokens: &[Token]) -> (usize, usize) {
-    let mut ncols = 0;
-    let nrows = tokens
+    let mut x = 0;
+    let y = tokens
         .iter()
         .filter(|tok| matches!(tok, Token::NewLine))
         .count();
@@ -79,7 +79,7 @@ fn get_board_dimensions(tokens: &[Token]) -> (usize, usize) {
     for token in tokens {
         match token {
             Token::NewLine => {
-                ncols = if count > ncols { count } else { ncols };
+                x = if count > x { count } else { x };
                 count = 0;
             }
             _ => {
@@ -87,7 +87,7 @@ fn get_board_dimensions(tokens: &[Token]) -> (usize, usize) {
             }
         }
     }
-    (ncols, nrows)
+    (x, y)
 }
 
 pub fn load_level(contents: &str) -> Result<World, String> {
@@ -99,51 +99,51 @@ pub fn load_level(contents: &str) -> Result<World, String> {
     match tokens.as_slice() {
         [Token::Text(title), level_toks @ ..] => {
             // Dimensions for the board
-            let (rows, cols) = get_board_dimensions(level_toks);
+            let (x, y) = get_board_dimensions(level_toks);
 
             // Create an initial board with default values (e.g., all `Wall`)
-            let mut board = Array2::from_elem((cols, rows), Tile::Empty);
+            let mut board = Array2::from_elem((y, x), Tile::Empty);
             let mut entities = Vec::new();
 
-            let (mut col, mut row): (usize, usize) = (0, 0);
+            let (mut x, mut y): (usize, usize) = (0, 0);
             for tok in level_toks.iter() {
                 match tok {
                     Token::Wall => {
-                        board[[row, col]] = Tile::Wall;
+                        board[[y, x]] = Tile::Wall;
                     }
                     Token::Player => {
                         entities.push(Entity::Player(Player {
-                            position: Coordinate { x: col, y: row },
+                            position: Coordinate { x, y },
                         }));
                     }
                     Token::Goal => {
-                        board[[row, col]] = Tile::Goal;
+                        board[[y, x]] = Tile::Goal;
                     }
                     Token::SokoBox => {
                         entities.push(Entity::SokoBox(SokoBox {
-                            position: Coordinate { x: col, y: row },
+                            position: Coordinate { x, y },
                         }));
                     }
                     Token::SokoBoxAndGoal => {
-                        board[[row, col]] = Tile::Goal;
+                        board[[y, x]] = Tile::Goal;
                         entities.push(Entity::SokoBox(SokoBox {
-                            position: Coordinate { x: col, y: row },
+                            position: Coordinate { x, y },
                         }));
                     }
                     Token::PlayerAndGoal => {
-                        board[[row, col]] = Tile::Goal;
+                        board[[y, x]] = Tile::Goal;
                         entities.push(Entity::Player(Player {
-                            position: Coordinate { x: col, y: row },
+                            position: Coordinate { x, y },
                         }));
                     }
                     Token::NewLine => {
-                        row += 1;
-                        col = 0;
+                        y += 1;
+                        x = 0;
                         continue;
                     }
                     _ => {}
                 }
-                col += 1;
+                x += 1;
             }
 
             // Create an instance of Level
@@ -151,7 +151,7 @@ pub fn load_level(contents: &str) -> Result<World, String> {
                 name: title.to_string(),
                 board,
                 entities,
-                // camera_position: Coordinate { x: 0, y: 0 },
+                camera_position: Coordinate { x: 0, y: 0 },
             };
             Ok(level)
         }
