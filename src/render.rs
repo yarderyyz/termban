@@ -146,21 +146,19 @@ fn render_sprites(item: RenderItem, glyph_buffer: GlyphCells) -> GlyphCells {
 /// let glyph_buffer = glypherize_graph(render_graph, area, render_fn);
 /// ```
 fn generate_render_graph(world: &World) -> RenderGraph {
-    let children = Some(
-        world
-            .entities
-            .iter()
-            .map(|ent| RenderNode {
-                item: RenderItem::Entity(ent.clone()),
-                children: None,
-            })
-            .collect(),
-    );
+    let children = world
+        .entities
+        .iter()
+        .map(|ent| RenderNode {
+            item: RenderItem::Entity(ent.clone()),
+            children: None,
+        })
+        .collect();
 
     RenderGraph {
         root: RenderNode {
             item: RenderItem::Board(world.board.clone()),
-            children,
+            children: Some(children),
         },
     }
 }
