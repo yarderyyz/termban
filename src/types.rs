@@ -40,6 +40,11 @@ pub struct Coordinate {
     pub x: usize,
     pub y: usize,
 }
+impl Coordinate {
+    pub fn arr_index(&self) -> [usize; 2] {
+        [self.y, self.x]
+    }
+}
 
 #[derive(Debug, Clone)]
 pub struct Player {

@@ -1,10 +1,114 @@
 use crate::sprites::get_player_sprite_4;
 use crate::types::{
-    Entity, GameWindow, GlyphCell, GlyphCells, RenderGraph, RenderItem, RenderNode,
-    World, Zoom,
+    Coordinate, Entity, GameWindow, GlyphCell, GlyphCells, RenderGraph, RenderItem,
+    RenderNode, World, Zoom,
 };
+
+use ndarray::Array2;
 use ratatui::style::Color;
 use ratatui::{buffer::Buffer, layout::Rect, widgets::Widget};
+
+pub fn is_in_bounds<T>(position: &Coordinate, buffer: &Array2<T>) -> bool {
+    let (height, width) = buffer.dim(); // Get the dimensions of the buffer
+
+    position.x < width || position.y < height
+}
+
+fn render_pixels(
+    pixel_size: usize,
+    item: RenderItem,
+    glyph_buffer: GlyphCells,
+) -> GlyphCells {
+    match item {
+        RenderItem::Board(board) => {
+            let mut glyph_buffer = glyph_buffer.clone();
+
+            for (yi, row) in board.rows().into_iter().enumerate() {
+                for (xi, tile) in row.iter().enumerate() {
+                    if let Some(color) = tile.color() {
+                        let pos = Coordinate { x: xi, y: yi };
+                        glyph_buffer =
+                            draw_square(color, pos, pixel_size, glyph_buffer.clone());
+                    }
+                }
+            }
+            glyph_buffer
+        }
+        RenderItem::Entity(entity) => {
+            let pos = entity.get_position();
+            draw_square(entity.color(), pos, pixel_size, glyph_buffer)
+        }
+    }
+}
+
+fn draw_square(
+    color: Color,
+    position: Coordinate,
+    size: usize,
+    glyph_buffer: GlyphCells,
+) -> GlyphCells {
+    let (x, y) = (position.x * size, position.y * size);
+    let mut glyph_buffer = glyph_buffer.clone();
+    for yi in y..(y + size) {
+        for xi in x..(x + size) {
+            // Each "pixel" is actually a single unicode character so in transforming from a grid
+            // of pixels to a grid of GlyphCells the y position in the Glyph Grid is half of the y
+            // position in the pixel grid
+            let pos = Coordinate { x: xi, y: yi / 2 };
+            if is_in_bounds(&pos, &glyph_buffer) {
+                if yi % 2 == 0 {
+                    glyph_buffer[pos.arr_index()].glyph = '▀';
+                    glyph_buffer[pos.arr_index()].fg = Some(color);
+                } else {
+                    glyph_buffer[pos.arr_index()].bg = Some(color);
+                }
+            }
+        }
+    }
+    glyph_buffer
+}
+
+fn render_sprites(item: RenderItem, glyph_buffer: GlyphCells) -> GlyphCells {
+    match item {
+        RenderItem::Board(board) => {
+            let mut glyph_buffer = glyph_buffer.clone();
+
+            for (yi, row) in board.rows().into_iter().enumerate() {
+                for (xi, tile) in row.iter().enumerate() {
+                    if let Some(color) = tile.color() {
+                        let pos = Coordinate { x: xi, y: yi };
+                        glyph_buffer = draw_square(color, pos, 4, glyph_buffer.clone());
+                    }
+                }
+            }
+            glyph_buffer
+        }
+        RenderItem::Entity(entity) => {
+            let pos = entity.get_position();
+            match entity {
+                Entity::Player(_) => {
+                    let mut glyph_buffer = glyph_buffer.clone();
+                    let player_sprite = get_player_sprite_4();
+                    for (yi, row) in player_sprite.chars.rows().into_iter().enumerate()
+                    {
+                        for (xi, pixel) in row.iter().enumerate() {
+                            let index = [yi + (pos.y * 2), xi + (pos.x * 4)];
+                            glyph_buffer[index].glyph = pixel.char;
+                            if pixel.fg.is_some() {
+                                glyph_buffer[index].fg = pixel.fg;
+                            }
+                            if pixel.bg.is_some() {
+                                glyph_buffer[index].bg = pixel.bg;
+                            }
+                        }
+                    }
+                    glyph_buffer
+                }
+                entity => draw_square(entity.color(), pos, 4, glyph_buffer),
+            }
+        }
+    }
+}
 
 /// Generates a `RenderGraph` from the provided `World` struct.
 ///
@@ -58,130 +162,6 @@ fn generate_render_graph(world: &World) -> RenderGraph {
             item: RenderItem::Board(world.board.clone()),
             children,
         },
-    }
-}
-
-fn render_1(item: RenderItem, glyph_buffer: GlyphCells) -> GlyphCells {
-    match item {
-        RenderItem::Board(board) => {
-            let mut glyph_buffer = glyph_buffer.clone();
-
-            for (yi, row) in board.rows().into_iter().enumerate() {
-                for (xi, tile) in row.iter().enumerate() {
-                    if yi % 2 == 0 {
-                        glyph_buffer[[yi / 2, xi]].glyph = '▀';
-                        glyph_buffer[[yi / 2, xi]].fg = tile.color();
-                    } else {
-                        glyph_buffer[[yi / 2, xi]].bg = tile.color();
-                    }
-                }
-            }
-            glyph_buffer
-        }
-        RenderItem::Entity(entity) => {
-            let mut glyph_buffer = glyph_buffer.clone();
-            let pos = entity.get_position();
-            if pos.y % 2 == 0 {
-                glyph_buffer[[pos.y / 2, pos.x]].fg = Some(entity.color());
-            } else {
-                glyph_buffer[[pos.y / 2, pos.x]].bg = Some(entity.color());
-            }
-            glyph_buffer
-        }
-    }
-}
-
-fn draw_2x2(color: Color, x: usize, y: usize, glyph_buffer: GlyphCells) -> GlyphCells {
-    let (x, y) = (x * 2, y * 2);
-    let mut glyph_buffer = glyph_buffer.clone();
-    for yi in y..(y + 2) {
-        for xi in x..(x + 2) {
-            if yi % 2 == 0 {
-                glyph_buffer[[yi / 2, xi]].glyph = '▀';
-                glyph_buffer[[yi / 2, xi]].fg = Some(color);
-            } else {
-                glyph_buffer[[yi / 2, xi]].bg = Some(color);
-            }
-        }
-    }
-    glyph_buffer
-}
-
-fn render_2(item: RenderItem, glyph_buffer: GlyphCells) -> GlyphCells {
-    match item {
-        RenderItem::Board(board) => {
-            let mut glyph_buffer = glyph_buffer.clone();
-
-            for (yi, row) in board.rows().into_iter().enumerate() {
-                for (xi, tile) in row.iter().enumerate() {
-                    if let Some(color) = tile.color() {
-                        glyph_buffer = draw_2x2(color, xi, yi, glyph_buffer.clone());
-                    }
-                }
-            }
-            glyph_buffer
-        }
-        RenderItem::Entity(entity) => {
-            let pos = entity.get_position();
-            draw_2x2(entity.color(), pos.x, pos.y, glyph_buffer)
-        }
-    }
-}
-
-fn draw_4x4(color: Color, x: usize, y: usize, glyph_buffer: GlyphCells) -> GlyphCells {
-    let (x, y) = (x * 4, y * 4);
-    let mut glyph_buffer = glyph_buffer.clone();
-    for yi in y..(y + 4) {
-        for xi in x..(x + 4) {
-            if yi % 2 == 0 {
-                glyph_buffer[[yi / 2, xi]].glyph = '▀';
-                glyph_buffer[[yi / 2, xi]].fg = Some(color);
-            } else {
-                glyph_buffer[[yi / 2, xi]].bg = Some(color);
-            }
-        }
-    }
-    glyph_buffer
-}
-
-fn render_4(item: RenderItem, glyph_buffer: GlyphCells) -> GlyphCells {
-    match item {
-        RenderItem::Board(board) => {
-            let mut glyph_buffer = glyph_buffer.clone();
-
-            for (yi, row) in board.rows().into_iter().enumerate() {
-                for (xi, tile) in row.iter().enumerate() {
-                    if let Some(color) = tile.color() {
-                        glyph_buffer = draw_4x4(color, xi, yi, glyph_buffer.clone());
-                    }
-                }
-            }
-            glyph_buffer
-        }
-        RenderItem::Entity(entity) => {
-            let pos = entity.get_position();
-            match entity {
-                Entity::Player(_) => {
-                    let mut glyph_buffer = glyph_buffer.clone();
-                    let player_sprite = get_player_sprite_4();
-                    for (yi, row) in player_sprite.chars.rows().into_iter().enumerate()
-                    {
-                        for (xi, pixel) in row.iter().enumerate() {
-                            let index = [yi + (pos.y * 2), xi + (pos.x * 4)];
-                            glyph_buffer[index].glyph = pixel.char;
-                            if pixel.fg.is_some() {
-                                glyph_buffer[index].fg = pixel.fg;
-                            }
-                            if pixel.bg.is_some() {
-                                glyph_buffer[index].bg = pixel.bg;
-                            }
-                        }
-                    }
-                    glyph_buffer
-                }
-                entity => draw_4x4(entity.color(), pos.x, pos.y, glyph_buffer),
-            }
-        }
     }
 }
 
@@ -258,14 +238,51 @@ where
     glypherize_node(graph.root, glyph_buffer, &render_fn)
 }
 
+/// Implements the `Widget` trait for the `GameWindow` struct, allowing it to be rendered within
+/// a specified area on the screen using a given buffer. The rendering is performed based on the
+/// zoom level of the game, with different rendering strategies applied depending on the selected zoom.
+///
+/// # Parameters
+///
+/// - `area`: A `Rect` that defines the portion of the screen where the game window should be rendered.
+/// - `buf`: A mutable reference to a `Buffer`, which will be used to store the rendered output.
+///
+/// # Details
+///
+/// - The method begins by generating a `RenderGraph` from the current state of the game world.
+///   TODO: this should be reworked so that the render graph is only updated when the scene changes.
+/// - Based on the zoom level (`Close`, `Middle`, or `Far`), the appropriate rendering function
+///   (`render_4`, `render_2`, or `render_1`) is selected and applied to convert the `RenderGraph`
+///   into a `GlyphCells` buffer.
+/// - The `GlyphCells` buffer is then iterated over, and each `GlyphCell` in the buffer is drawn onto
+///   the `buf` at the corresponding coordinates within the specified `area`.
+/// - If a `CharPixel` has a foreground color (`fg`) or background color (`bg`), these colors are
+///   applied to the respective cells in the buffer.
+///
+/// # Notes
+///
+/// - The method handles the precision loss clippy warning using `#[allow(clippy::cast_precision_loss)]`,
+///   which is relevant when converting `usize` values (used for indexing) to `u16` for setting buffer coordinates.
+///
+/// # Examples
+///
+/// ```rust
+/// let mut buffer = Buffer::empty(Rect::new(0, 0, 80, 25));
+/// let game_window = GameWindow::new(world);
+/// game_window.render(Rect::new(0, 0, 80, 25), &mut buffer);
+/// ```
 impl Widget for GameWindow {
     #[allow(clippy::cast_precision_loss)]
     fn render(self, area: Rect, buf: &mut Buffer) {
         let graph = generate_render_graph(&self.world);
         let glyph_buffer = match self.zoom {
-            Zoom::Close => glypherize_graph(graph, area, render_4),
-            Zoom::Middle => glypherize_graph(graph, area, render_2),
-            Zoom::Far => glypherize_graph(graph, area, render_1),
+            Zoom::Close => glypherize_graph(graph, area, render_sprites),
+            Zoom::Middle => {
+                glypherize_graph(graph, area, |item, buf| render_pixels(2, item, buf))
+            }
+            Zoom::Far => {
+                glypherize_graph(graph, area, |item, buf| render_pixels(1, item, buf))
+            }
         };
 
         for (yi, row) in glyph_buffer.rows().into_iter().enumerate() {
