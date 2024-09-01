@@ -17,6 +17,7 @@ use std::fs::File;
 use std::io::{self, stdout, Read};
 
 mod colors;
+mod render;
 mod soko_loader;
 mod sprites;
 mod types;
