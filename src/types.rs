@@ -22,6 +22,12 @@ pub enum Action {
 }
 
 #[derive(Debug, Clone)]
+pub enum MenuAction {
+    StartGame,
+    None,
+}
+
+#[derive(Debug, Clone)]
 pub enum Zoom {
     Close,
     Middle,

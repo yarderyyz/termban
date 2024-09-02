@@ -22,6 +22,18 @@ mod soko_loader;
 mod sprites;
 mod types;
 
+#[derive(Debug, Default, PartialEq, Eq, Clone)]
+enum RunningState {
+    #[default]
+    Menu,
+    Game,
+}
+
+#[derive(Debug, Default, Clone)]
+struct AppModel {
+    state: RunningState,
+}
+
 fn read_file(filename: &str) -> Result<String, io::Error> {
     let mut file = File::open(filename)?;
     let mut contents = String::new();
@@ -29,10 +41,7 @@ fn read_file(filename: &str) -> Result<String, io::Error> {
     Ok(contents)
 }
 
-fn main() -> io::Result<()> {
-    enable_raw_mode()?;
-    stdout().execute(EnterAlternateScreen)?;
-    let mut terminal = Terminal::new(CrosstermBackend::new(stdout()))?;
+fn play_game<B: Backend>(terminal: &mut Terminal<B>) -> io::Result<()> {
     let mut history = Vec::new();
 
     let ban_filename = "./resources/levels/micro2.ban";
@@ -111,12 +120,81 @@ fn main() -> io::Result<()> {
             types::Action::ZoomMiddle => game_window.zoom = types::Zoom::Middle,
             types::Action::ZoomFar => game_window.zoom = types::Zoom::Far,
             types::Action::None => {}
+        };
+    }
+    Ok(())
+}
+
+fn start_menu<B: Backend>(terminal: &mut Terminal<B>) -> io::Result<()> {
+    loop {
+        let mut debug: Vec<String> = Vec::new();
+
+        terminal.draw(|frame: &mut Frame| {
+            debug.push("Debug".to_string());
+            let main_area = frame.area();
+
+            let [left_area, right_area] = Layout::horizontal([
+                Constraint::Percentage(50),
+                Constraint::Percentage(50),
+            ])
+            .areas(main_area);
+
+            let outer_left_block = Block::bordered().title("SOKOBAN");
+            // let inner_left = outer_left_block.inner(left_area);
+
+            frame.render_widget(outer_left_block, left_area);
+
+            let text = debug.join("\n");
+            frame.render_widget(
+                Paragraph::new(text).block(Block::bordered().title("debug")),
+                right_area,
+            );
+        })?;
+
+        if let types::Action::Quit = handle_events()? {
+            break;
+        }
+        //match handle_events()? {
+        //    types::Action::Quit => {
+        //        break;
+        //    }
+        //    _ => {}
+        //};
+    }
+    Ok(())
+}
+
+fn main() -> io::Result<()> {
+    enable_raw_mode()?;
+    stdout().execute(EnterAlternateScreen)?;
+    let mut terminal = Terminal::new(CrosstermBackend::new(stdout()))?;
+    let mut action = types::MenuAction::None;
+    loop {
+        let app_model = process_app_state(action.clone());
+        match app_model.state {
+            RunningState::Menu => {
+                start_menu(&mut terminal)?;
+                action = types::MenuAction::StartGame;
+            }
+            RunningState::Game => {
+                play_game(&mut terminal)?;
+                break;
+            }
         }
     }
 
     disable_raw_mode()?;
     stdout().execute(LeaveAlternateScreen)?;
     Ok(())
+}
+
+fn process_app_state(action: types::MenuAction) -> AppModel {
+    match action {
+        types::MenuAction::None => AppModel::default(),
+        types::MenuAction::StartGame => AppModel {
+            state: RunningState::Game,
+        },
+    }
 }
 
 fn handle_move(
