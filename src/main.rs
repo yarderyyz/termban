@@ -35,16 +35,18 @@ fn main() -> io::Result<()> {
     let mut terminal = Terminal::new(CrosstermBackend::new(stdout()))?;
     let mut history = Vec::new();
 
-    let filename = "./resources/levels/micro.ban";
+    let ban_filename = "./resources/levels/micro2.ban";
     // TODO: actually handle errors here
-    let world = read_file(filename)
-        .map(|contents| soko_loader::load_level(&contents).unwrap())
+    //
+    let worlds = read_file(ban_filename)
+        .map(|contents| soko_loader::parse_sokoban_worlds(&contents).unwrap())
         .unwrap();
 
-    let title = world.name.clone();
+    let starting_world = 33;
+    let title = worlds[starting_world].name.clone();
 
     let mut game_window = types::GameWindow {
-        world,
+        world: worlds[starting_world].clone(),
         zoom: types::Zoom::Far,
     };
 
