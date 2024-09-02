@@ -102,6 +102,21 @@ impl World {
             }
         }
     }
+
+    // If every soko_box entity share a coordinate space with a goal tile, that means you win!
+    pub fn is_sokoban_solved(&self) -> bool {
+        self.entities
+            .iter()
+            .filter(|ent| matches!(ent, Entity::SokoBox(_)))
+            .all(|ent| {
+                if let Entity::SokoBox(soko_box) = ent {
+                    let tile = &self.board[[soko_box.position.y, soko_box.position.x]];
+                    matches!(tile, Tile::Goal)
+                } else {
+                    false // This line should never be reached due to the filter
+                }
+            })
+    }
 }
 
 impl Tile {

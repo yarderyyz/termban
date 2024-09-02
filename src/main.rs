@@ -58,6 +58,10 @@ fn main() -> io::Result<()> {
         }
         debug.push(format!("{:?}", &game_window.world.board.dim()));
 
+        if game_window.world.is_sokoban_solved() {
+            debug.push("You win!".to_string());
+        }
+
         terminal.draw(|frame: &mut Frame| {
             let main_area = frame.area();
 
