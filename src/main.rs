@@ -58,6 +58,10 @@ fn main() -> io::Result<()> {
         }
         debug.push(format!("{:?}", &game_window.world.board.dim()));
 
+        if game_window.world.is_sokoban_solved() {
+            debug.push("You win!".to_string());
+        }
+
         terminal.draw(|frame: &mut Frame| {
             let main_area = frame.area();
 
@@ -88,9 +92,6 @@ fn main() -> io::Result<()> {
                 if let Some(new_level) = handle_move(&game_window.world, direction) {
                     history.push(game_window.world.clone());
                     game_window.world = new_level;
-                    if game_window.world.is_sokoban_solved() {
-                        // println!("Game is solved!") // Uncomment to prove this function works
-                    }
                 }
             }
             types::Action::Undo => {

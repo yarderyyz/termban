@@ -110,7 +110,7 @@ impl World {
             .filter(|ent| matches!(ent, Entity::SokoBox(_)))
             .all(|ent| {
                 if let Entity::SokoBox(soko_box) = ent {
-                    let tile = &self.map[[soko_box.coords.y, soko_box.coords.x]];
+                    let tile = &self.board[[soko_box.position.y, soko_box.position.x]];
                     matches!(tile, Tile::Goal)
                 } else {
                     false // This line should never be reached due to the filter
