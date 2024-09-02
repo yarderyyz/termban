@@ -22,7 +22,7 @@
 use crate::types::{Coordinate, Entity, Player, SokoBox, Tile, World};
 use ndarray::Array2;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 enum Token {
     Text(String),
     Wall,
@@ -90,12 +90,32 @@ fn get_board_dimensions(tokens: &[Token]) -> (usize, usize) {
     (x, y)
 }
 
-pub fn load_level(contents: &str) -> Result<World, String> {
-    let tokens = tokenize(contents);
-    if tokens.is_none() {
-        return Err("Level failed to load".to_string());
-    }
-    let tokens = tokens.unwrap();
+// Return a Vector of each sokoban level (as a Vector of Tokens)
+fn group_sokoban_tokens(tokens: Vec<Token>) -> Vec<Vec<Token>> {
+    // Collect all indexes where the element is alphabetic
+    let mut text_indexes: Vec<usize> = tokens
+        .iter()
+        .enumerate()
+        .filter(|(_, token)| matches!(token, Token::Text(_title)))
+        .map(|(index, _)| index)
+        .collect();
+
+    // Add the length of the vector as the last index to handle the final group
+    text_indexes.push(tokens.len());
+
+    // Use the indexes to create slices of the vector with map
+    text_indexes
+        .windows(2)
+        .map(|window| {
+            let start = window[0];
+            let end = window[1];
+            tokens[start..end].to_vec()
+        })
+        .collect()
+}
+
+// Parses a Single level in the form of a Vec of tokens
+fn parse_sokoban_level(tokens: Vec<Token>) -> Result<World, String> {
     match tokens.as_slice() {
         [Token::Text(title), level_toks @ ..] => {
             // Dimensions for the board
@@ -157,4 +177,21 @@ pub fn load_level(contents: &str) -> Result<World, String> {
         }
         _ => Err("Level must start with a title".to_string()),
     }
+}
+
+pub fn parse_sokoban_worlds(sokoban_text: &str) -> Result<Vec<World>, String> {
+    let tokens = tokenize(sokoban_text);
+    if tokens.is_none() {
+        return Err("Level failed to load".to_string());
+    }
+    let tokens = tokens.unwrap();
+
+    let sokoban_token_groups = group_sokoban_tokens(tokens);
+    let mut worlds = Vec::new();
+    for level in sokoban_token_groups {
+        if let Ok(world) = parse_sokoban_level(level.clone()) {
+            worlds.push(world)
+        }
+    }
+    Ok(worlds)
 }
