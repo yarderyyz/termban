@@ -90,17 +90,19 @@ impl Level {
         }
     }
 
+    // If every soko_box entity share a coordinate space with a goal tile, that means you win!
     pub fn is_sokoban_solved(&self) -> bool {
-        for entity in &self.entities {
-            if let Entity::SokoBox(soko_box) = entity {
-                let _t = &self.map[[soko_box.coords.y, soko_box.coords.x]];
-                if let Tile::Goal = _t {
+        self.entities
+            .iter()
+            .filter(|ent| matches!(ent, Entity::SokoBox(_)))
+            .all(|ent| {
+                if let Entity::SokoBox(soko_box) = ent {
+                    let tile = &self.map[[soko_box.coords.y, soko_box.coords.x]];
+                    matches!(tile, Tile::Goal)
                 } else {
-                    return false;
+                    false // This line should never be reached due to the filter
                 }
-            }
-        }
-        true
+            })
     }
 }
 
