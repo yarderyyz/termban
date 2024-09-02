@@ -17,7 +17,9 @@ use std::fs::File;
 use std::io::{self, stdout, Read};
 
 mod colors;
+mod render;
 mod soko_loader;
+mod sprites;
 mod types;
 
 fn read_file(filename: &str) -> Result<String, io::Error> {
@@ -35,20 +37,26 @@ fn main() -> io::Result<()> {
 
     let filename = "./resources/levels/micro.ban";
     // TODO: actually handle errors here
-    let mut level = read_file(filename)
+    let world = read_file(filename)
         .map(|contents| soko_loader::load_level(&contents).unwrap())
         .unwrap();
 
-    let title = level.name.clone();
+    let title = world.name.clone();
+
+    let mut game_window = types::GameWindow {
+        world,
+        zoom: types::Zoom::Far,
+    };
 
     loop {
         let mut debug: Vec<String> = Vec::new();
 
-        for entity in level.entities.iter_mut() {
+        for entity in game_window.world.entities.iter() {
             if let types::Entity::Player(player) = entity {
-                debug.push(format!("{:?}", player.coords.clone()));
+                debug.push(format!("{:?}", player.position.clone()));
             }
         }
+        debug.push(format!("{:?}", &game_window.world.board.dim()));
 
         terminal.draw(|frame: &mut Frame| {
             let main_area = frame.area();
@@ -63,7 +71,7 @@ fn main() -> io::Result<()> {
             let inner_left = outer_left_block.inner(left_area);
 
             frame.render_widget(outer_left_block, left_area);
-            frame.render_widget(level.clone(), inner_left);
+            frame.render_widget(game_window.clone(), inner_left);
 
             let text = debug.join("\n");
             frame.render_widget(
@@ -77,22 +85,25 @@ fn main() -> io::Result<()> {
                 break;
             }
             types::Action::Move(direction) => {
-                if let Some(new_level) = handle_move(&level, direction) {
-                    history.push(level.clone());
-                    level = new_level;
+                if let Some(new_level) = handle_move(&game_window.world, direction) {
+                    history.push(game_window.world.clone());
+                    game_window.world = new_level;
                 }
             }
             types::Action::Undo => {
                 if let Some(prev_level) = history.pop() {
-                    level = prev_level;
+                    game_window.world = prev_level;
                 }
             }
             types::Action::Reset => {
-                history.push(level.clone());
+                history.push(game_window.world.clone());
                 if let Some(prev_level) = history.first() {
-                    level = prev_level.clone();
+                    game_window.world = prev_level.clone();
                 }
             }
+            types::Action::ZoomClose => game_window.zoom = types::Zoom::Close,
+            types::Action::ZoomMiddle => game_window.zoom = types::Zoom::Middle,
+            types::Action::ZoomFar => game_window.zoom = types::Zoom::Far,
             types::Action::None => {}
         }
     }
@@ -103,11 +114,9 @@ fn main() -> io::Result<()> {
 }
 
 fn handle_move(
-    prev_level: &types::Level,
+    prev_level: &types::World,
     direction: types::Direction,
-) -> Option<types::Level> {
-    // TODO: rework me so I return a new world with the updated move rather than mutating the
-    // existing world. This is the first step to supporting UNDO
+) -> Option<types::World> {
     let mut player_move = None;
     let mut level = prev_level.clone();
 
@@ -116,33 +125,34 @@ fn handle_move(
     // set the move
     for (index, entity) in level.entities.iter().enumerate() {
         if let types::Entity::Player(player) = entity {
-            let new_chords = get_new_coords(player.coords.clone(), &direction);
+            let new_position = get_new_position(player.position.clone(), &direction);
 
-            match level.map[[new_chords.y, new_chords.x]] {
+            match level.board[[new_position.y, new_position.x]] {
                 types::Tile::Wall => player_move = None,
-                _ => player_move = Some((index, new_chords)),
+                _ => player_move = Some((index, new_position)),
             }
             break;
         }
     }
 
     let mut soko_box_move = None;
-    if let Some((_, player_coords)) = player_move.clone() {
+    if let Some((_, player_position)) = player_move.clone() {
         for (index, entity) in level.entities.iter().enumerate() {
             if let types::Entity::SokoBox(soko_box) = entity {
                 // if there is a soko_box where the player wants to move see if we can
                 // push it.
-                if soko_box.coords == player_coords.clone() {
-                    let new_coord = get_new_coords(soko_box.coords.clone(), &direction);
+                if soko_box.position == player_position.clone() {
+                    let new_position =
+                        get_new_position(soko_box.position.clone(), &direction);
 
-                    if level.is_tile_occupied(&new_coord) {
+                    if level.is_tile_occupied(&new_position) {
                         // if the tile we are trying to move too is occupied both moves are
                         // invalid.
                         soko_box_move = None;
                         player_move = None;
                     } else {
                         // otherwise move the soko_box
-                        soko_box_move = Some((index, new_coord.clone()));
+                        soko_box_move = Some((index, new_position.clone()));
                     }
                 }
             }
@@ -150,42 +160,42 @@ fn handle_move(
     }
 
     // resolve the movement
-    if let Some((index, new_coords)) = player_move {
+    if let Some((index, new_position)) = player_move {
         if let types::Entity::Player(ref mut player) = &mut level.entities[index] {
-            player.coords = new_coords.clone();
+            player.position = new_position.clone();
         }
     } else {
         return None;
     }
-    if let Some((index, new_coords)) = soko_box_move {
+    if let Some((index, new_position)) = soko_box_move {
         if let types::Entity::SokoBox(ref mut soko_box) = &mut level.entities[index] {
-            soko_box.coords = new_coords.clone();
+            soko_box.position = new_position.clone();
         }
     }
 
     Some(level)
 }
 
-fn get_new_coords(
-    coords: types::Coordinate,
+fn get_new_position(
+    position: types::Coordinate,
     direction: &types::Direction,
 ) -> types::Coordinate {
     match direction {
         types::Direction::Up => types::Coordinate {
-            x: coords.x,
-            y: if coords.y > 0 { coords.y - 1 } else { 0 },
+            x: position.x,
+            y: if position.y > 0 { position.y - 1 } else { 0 },
         },
         types::Direction::Down => types::Coordinate {
-            x: coords.x,
-            y: coords.y + 1,
+            x: position.x,
+            y: position.y + 1,
         },
         types::Direction::Left => types::Coordinate {
-            x: if coords.x > 0 { coords.x - 1 } else { 0 },
-            y: coords.y,
+            x: if position.x > 0 { position.x - 1 } else { 0 },
+            y: position.y,
         },
         types::Direction::Right => types::Coordinate {
-            x: coords.x + 1,
-            y: coords.y,
+            x: position.x + 1,
+            y: position.y,
         },
     }
 }
@@ -221,6 +231,11 @@ fn process_key_press(key_code: KeyCode) -> io::Result<types::Action> {
         KeyCode::Right | KeyCode::Char('d') => {
             Ok(types::Action::Move(types::Direction::Right))
         }
+
+        // View
+        KeyCode::Char('1') => Ok(types::Action::ZoomClose),
+        KeyCode::Char('2') => Ok(types::Action::ZoomMiddle),
+        KeyCode::Char('3') => Ok(types::Action::ZoomFar),
 
         _ => Ok(types::Action::None),
     }
