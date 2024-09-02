@@ -182,11 +182,12 @@ fn parse_sokoban_level(tokens: Vec<Token>) -> Result<World, String> {
 pub fn parse_sokoban_worlds(sokoban_text: &str) -> Result<Vec<World>, String> {
     if let Some(tokens) = tokenize(sokoban_text) {
         let sokoban_token_groups = group_sokoban_tokens(tokens);
-        let mut worlds = Vec::new();
-        for level in sokoban_token_groups {
-            if let Ok(world) = parse_sokoban_level(level.clone()) {
-                worlds.push(world);
-            }
+        let worlds: Vec<World> = sokoban_token_groups
+            .iter()
+            .flat_map(|level| parse_sokoban_level(level.clone()))
+            .collect();
+        if worlds.is_empty() {
+            return Err("No Levels were loaded".to_string());
         }
         Ok(worlds)
     } else {
