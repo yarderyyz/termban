@@ -3,6 +3,32 @@ use ratatui::style::Color;
 use crate::colors::{get_color, TolColor};
 use ndarray::Array2;
 
+#[derive(Debug)]
+pub struct Game {
+    pub window: GameWindow,
+    pub history: Vec<World>,
+}
+
+#[derive(Debug)]
+pub struct Model {
+    pub counter: i32,
+    pub running_state: RunningState,
+    pub game: Game,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub enum RunningState {
+    Menu,
+    Game,
+    Done,
+}
+
+#[derive(PartialEq)]
+pub enum MenuAction {
+    StartGame,
+    Quit,
+}
+
 pub enum Direction {
     Left,
     Right,
@@ -10,7 +36,7 @@ pub enum Direction {
     Down,
 }
 
-pub enum Action {
+pub enum GameAction {
     Quit,
     Move(Direction),
     Undo,
@@ -19,12 +45,6 @@ pub enum Action {
     ZoomClose,
     ZoomMiddle,
     ZoomFar,
-}
-
-#[derive(Debug, Clone)]
-pub enum MenuAction {
-    StartGame,
-    None,
 }
 
 #[derive(Debug, Clone)]
@@ -139,6 +159,7 @@ impl Tile {
 pub struct GameWindow {
     pub world: World,
     pub zoom: Zoom,
+    pub debug: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
