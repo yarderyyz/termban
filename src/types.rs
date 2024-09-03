@@ -11,7 +11,6 @@ pub struct Game {
 
 #[derive(Debug)]
 pub struct Model {
-    pub counter: i32,
     pub running_state: RunningState,
     pub game: Game,
 }

@@ -33,7 +33,6 @@ fn main() -> io::Result<()> {
         debug: Vec::new(),
     };
     let mut model = types::Model {
-        counter: 0,
         running_state: types::RunningState::Menu,
         game: types::Game {
             history: Vec::new(),
