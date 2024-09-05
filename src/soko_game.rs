@@ -48,9 +48,9 @@ pub fn handle_key(key: event::KeyEvent) -> Option<GameAction> {
         KeyCode::Right | KeyCode::Char('d') => Some(GameAction::Move(Direction::Right)),
 
         // View
-        KeyCode::Char('1') => Some(GameAction::ZoomClose),
+        KeyCode::Char('1') => Some(GameAction::ZoomFar),
         KeyCode::Char('2') => Some(GameAction::ZoomMiddle),
-        KeyCode::Char('3') => Some(GameAction::ZoomFar),
+        KeyCode::Char('3') => Some(GameAction::ZoomClose),
 
         _ => Some(GameAction::None),
     }
