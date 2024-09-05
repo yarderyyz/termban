@@ -66,7 +66,7 @@ fn main() -> io::Result<()> {
                 // @lee-gauthier? Maybe this needs to be refactored into update or something --
                 // but the model, worlds, and current world lives in main eh?
                 // We should do some light refactoring?
-                if let Some(soko_game::GameAction::Win) = current_msg {
+                if let Some(types::GameAction::Win) = current_msg {
                     current_world_i += 1;
                     model.game.window.world = worlds[current_world_i].clone();
 

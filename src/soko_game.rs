@@ -2,7 +2,7 @@ use std::io;
 use std::time::Duration;
 
 use crate::types::{
-    Coordinate, Direction, Entity, Model, RunningState, Tile, World, Zoom,
+    Coordinate, Direction, Entity, GameAction, Model, RunningState, Tile, World, Zoom,
 };
 use ratatui::prelude::*;
 use ratatui::{
@@ -32,19 +32,6 @@ pub fn view(model: &mut Model, frame: &mut Frame) {
         Paragraph::new(text).block(Block::bordered().title("debug")),
         right_area,
     );
-}
-
-#[derive(Debug)]
-pub enum GameAction {
-    None,
-    Quit,
-    Move(Direction),
-    Undo,
-    Reset,
-    ZoomClose,
-    ZoomMiddle,
-    ZoomFar,
-    Win,
 }
 
 pub fn handle_key(key: event::KeyEvent) -> Option<GameAction> {
