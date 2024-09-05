@@ -1,3 +1,4 @@
+use crate::copy_text;
 use crate::types::{MenuAction, Model, RunningState};
 use std::io;
 use std::time::Duration;
@@ -9,31 +10,7 @@ use ratatui::{
 };
 
 pub fn view(_model: &mut Model, frame: &mut Frame) {
-    render_widget_paragraph(
-        frame,
-        "
-TERMBAN SOKOBAN 1.0 ENGINE
-==========================
-INTRODUCING... MICROBAN I!
-        BY DAVID W. SKINNER
-
-CONTROLS:       Press Enter to Begin
-                Press Escape to Leave
-                Move Player Using WASD/Arrows
-                Press R to Restart Level
-                Press Z or U to Undo a Move
-
-RULES:
-    1. The PLAYER and BOXES can only occupy EMPTY or GOAL Tiles.
-    2. The PLAYER can push a BOX onto an EMPTY Tile.
-    3. A BOX cannot be pushed by another BOX.
-GOAL:
-    The puzzle is solved when every GOAL tile is occupied by a BOX.
-",
-    );
-}
-
-fn render_widget_paragraph(frame: &mut Frame<'_>, paragraph: &str) {
+    let paragraph = copy_text::MENU;
     frame.render_widget(Paragraph::new(paragraph.to_string()), frame.area());
 }
 

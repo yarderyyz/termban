@@ -2,6 +2,7 @@ use std::fs::File;
 use std::io::{self, Read};
 
 mod colors;
+mod copy_text;
 mod menu;
 mod render;
 mod soko_game;
