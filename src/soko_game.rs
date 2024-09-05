@@ -2,7 +2,7 @@ use std::io;
 use std::time::Duration;
 
 use crate::types::{
-    Coordinate, Direction, Entity, GameAction, Model, RunningState, Tile, World, Zoom,
+    Coordinate, Direction, Entity, Model, RunningState, Tile, World, Zoom,
 };
 use ratatui::prelude::*;
 use ratatui::{
@@ -32,6 +32,19 @@ pub fn view(model: &mut Model, frame: &mut Frame) {
         Paragraph::new(text).block(Block::bordered().title("debug")),
         right_area,
     );
+}
+
+#[derive(Debug)]
+pub enum GameAction {
+    None,
+    Quit,
+    Move(Direction),
+    Undo,
+    Reset,
+    ZoomClose,
+    ZoomMiddle,
+    ZoomFar,
+    Win,
 }
 
 pub fn handle_key(key: event::KeyEvent) -> Option<GameAction> {
@@ -72,17 +85,31 @@ pub fn update(model: &mut Model, msg: GameAction) -> Option<GameAction> {
             }
         }
         GameAction::Reset => {
-            game.history.push(game.window.world.clone());
-            if let Some(prev_level) = game.history.first() {
-                game.window.world = prev_level.clone();
-            }
+            reset_world(game);
         }
         GameAction::ZoomClose => game.window.zoom = Zoom::Close,
         GameAction::ZoomMiddle => game.window.zoom = Zoom::Middle,
         GameAction::ZoomFar => game.window.zoom = Zoom::Far,
         GameAction::None => {}
+        GameAction::Win => {}
     };
     None
+}
+
+// If you have no history, you cannot undo, and you cannot
+// revert to the past
+pub fn reset_history(game: &mut crate::types::Game) {
+    game.history.clear();
+}
+
+// When we reset a world, we want to set it to the first history
+// if there is some history, then we want to erase the history
+// starting a new adventure in puzzlenomics!
+pub fn reset_world(game: &mut crate::types::Game) {
+    if let Some(prev_world_state) = game.history.first() {
+        game.window.world = prev_world_state.clone();
+    }
+    reset_history(game);
 }
 
 pub fn handle_event(model: &mut Model) -> io::Result<Option<GameAction>> {
@@ -98,16 +125,17 @@ pub fn handle_event(model: &mut Model) -> io::Result<Option<GameAction>> {
         .debug
         .push(format!("{:?}", &window.world.board.dim()));
 
-    if window.world.is_sokoban_solved() {
-        window.debug.push("You win!".to_string());
-    }
-
     if event::poll(Duration::from_millis(250))? {
         if let Event::Key(key) = event::read()? {
             if key.kind == event::KeyEventKind::Press {
                 return Ok(handle_key(key));
             }
         }
+    }
+
+    // Prevent handling key events, coincidentally, because it's solved!
+    if window.world.is_sokoban_solved() {
+        return Ok(Some(GameAction::Win));
     }
     Ok(None)
 }

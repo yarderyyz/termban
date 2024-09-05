@@ -28,22 +28,12 @@ pub enum MenuAction {
     Quit,
 }
 
+#[derive(Debug)]
 pub enum Direction {
     Left,
     Right,
     Up,
     Down,
-}
-
-pub enum GameAction {
-    Quit,
-    Move(Direction),
-    Undo,
-    Reset,
-    None,
-    ZoomClose,
-    ZoomMiddle,
-    ZoomFar,
 }
 
 #[derive(Debug, Clone)]

@@ -26,9 +26,10 @@ fn main() -> io::Result<()> {
     let worlds = read_file(ban_filename)
         .map(|contents| soko_loader::parse_sokoban_worlds(&contents).unwrap())
         .unwrap();
-    let starting_world = 33;
+    let starting_world_i = 0;
+    let mut current_world_i = starting_world_i;
     let game_window = types::GameWindow {
-        world: worlds[starting_world].clone(),
+        world: worlds[starting_world_i].clone(),
         zoom: types::Zoom::Far,
         debug: Vec::new(),
     };
@@ -60,6 +61,20 @@ fn main() -> io::Result<()> {
 
                 // Handle events and map to a Message
                 let mut current_msg = soko_game::handle_event(&mut model)?;
+
+                // This has to happen before the While loop below, for some reason.
+                // @lee-gauthier? Maybe this needs to be refactored into update or something --
+                // but the model, worlds, and current world lives in main eh?
+                // We should do some light refactoring?
+                if let Some(soko_game::GameAction::Win) = current_msg {
+                    current_world_i += 1;
+                    model.game.window.world = worlds[current_world_i].clone();
+
+                    // Erase your history before resetting, lest you restart your completed level
+                    soko_game::reset_history(&mut model.game);
+                    soko_game::reset_world(&mut model.game);
+                    continue;
+                }
 
                 // Process updates as long as they return a non-None message
                 while current_msg.is_some() {
