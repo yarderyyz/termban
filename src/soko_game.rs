@@ -59,7 +59,7 @@ pub fn handle_key(key: event::KeyEvent) -> Option<GameAction> {
 pub fn update(model: &mut Model, msg: GameAction) -> Option<GameAction> {
     let game = &mut model.game;
     match msg {
-        GameAction::Quit => model.running_state = RunningState::Done,
+        GameAction::Quit => model.running_state = RunningState::Menu,
         GameAction::Move(direction) => {
             if let Some(new_level) = handle_move(&game.window.world, direction) {
                 game.history.push(game.window.world.clone());
