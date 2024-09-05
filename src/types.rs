@@ -48,6 +48,14 @@ pub enum MenuAction {
 }
 
 #[derive(Debug)]
+pub enum Direction {
+    Left,
+    Right,
+    Up,
+    Down,
+}
+
+#[derive(Debug)]
 pub enum GameAction {
     None,
     Quit,
@@ -58,14 +66,6 @@ pub enum GameAction {
     ZoomMiddle,
     ZoomFar,
     Win,
-}
-
-#[derive(Debug)]
-pub enum Direction {
-    Left,
-    Right,
-    Up,
-    Down,
 }
 
 #[derive(Debug, Clone)]
