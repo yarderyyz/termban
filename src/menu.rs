@@ -10,8 +10,7 @@ use ratatui::{
 };
 
 pub fn view(_model: &mut Model, frame: &mut Frame) {
-    let paragraph = copy_text::MENU;
-    frame.render_widget(Paragraph::new(paragraph.to_string()), frame.area());
+    frame.render_widget(Paragraph::new(copy_text::MENU.to_string()), frame.area());
 }
 
 pub fn update(model: &mut Model, msg: MenuAction) -> Option<MenuAction> {
