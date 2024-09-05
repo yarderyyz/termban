@@ -63,10 +63,8 @@ fn main() -> io::Result<()> {
                 // Handle events and map to a Message
                 let mut current_msg = soko_game::handle_event(&mut model)?;
 
-                // This has to happen before the While loop below, for some reason.
-                // @lee-gauthier? Maybe this needs to be refactored into update or something --
-                // but the model, worlds, and current world lives in main eh?
-                // We should do some light refactoring?
+                // When you win a level, move to the next level!
+                // XXX: This has to happen before the while loop below. Why?
                 if let Some(types::GameAction::Win) = current_msg {
                     current_world_i += 1;
                     model.game.window.world = worlds[current_world_i].clone();
