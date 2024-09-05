@@ -70,10 +70,7 @@ fn main() -> io::Result<()> {
                 if let Some(types::GameAction::Win) = current_msg {
                     current_world_i += 1;
                     model.game.window.world = worlds[current_world_i].clone();
-
-                    // Erase your history before resetting, lest you restart your completed level
-                    soko_game::reset_history(&mut model.game);
-                    soko_game::reset_world(&mut model.game);
+                    model.game.reload_world();
                     continue;
                 }
 

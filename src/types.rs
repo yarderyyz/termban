@@ -9,6 +9,25 @@ pub struct Game {
     pub history: Vec<World>,
 }
 
+impl Game {
+    // Erasing your history, erases your past
+    pub fn erase_history(self: &mut Game) {
+        self.history.clear();
+    }
+    // Let's start over from the beginning.
+    pub fn refresh_window(self: &mut Game) {
+        if let Some(prev_world_state) = self.history.first() {
+            self.window.world = prev_world_state.clone();
+        }
+        self.erase_history();
+    }
+    // Loading a new area erases your history and refreshes the window
+    pub fn reload_world(self: &mut Game) {
+        self.erase_history();
+        self.refresh_window();
+    }
+}
+
 #[derive(Debug)]
 pub struct Model {
     pub running_state: RunningState,

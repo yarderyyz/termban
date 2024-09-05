@@ -72,7 +72,7 @@ pub fn update(model: &mut Model, msg: GameAction) -> Option<GameAction> {
             }
         }
         GameAction::Reset => {
-            reset_world(game);
+            game.refresh_window();
         }
         GameAction::ZoomClose => game.window.zoom = Zoom::Close,
         GameAction::ZoomMiddle => game.window.zoom = Zoom::Middle,
@@ -81,22 +81,6 @@ pub fn update(model: &mut Model, msg: GameAction) -> Option<GameAction> {
         GameAction::Win => {}
     };
     None
-}
-
-// If you have no history, you cannot undo, and you cannot
-// revert to the past
-pub fn reset_history(game: &mut crate::types::Game) {
-    game.history.clear();
-}
-
-// When we reset a world, we want to set it to the first history
-// if there is some history, then we want to erase the history
-// starting a new adventure in puzzlenomics!
-pub fn reset_world(game: &mut crate::types::Game) {
-    if let Some(prev_world_state) = game.history.first() {
-        game.window.world = prev_world_state.clone();
-    }
-    reset_history(game);
 }
 
 pub fn handle_event(model: &mut Model) -> io::Result<Option<GameAction>> {
