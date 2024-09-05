@@ -1,3 +1,4 @@
+use crate::copy_text;
 use crate::types::{MenuAction, Model, RunningState};
 use std::io;
 use std::time::Duration;
@@ -9,10 +10,7 @@ use ratatui::{
 };
 
 pub fn view(_model: &mut Model, frame: &mut Frame) {
-    frame.render_widget(
-        Paragraph::new("Press space to start\nPress esc to Quit".to_string()),
-        frame.area(),
-    );
+    frame.render_widget(Paragraph::new(copy_text::MENU.to_string()), frame.area());
 }
 
 pub fn update(model: &mut Model, msg: MenuAction) -> Option<MenuAction> {
@@ -45,7 +43,7 @@ pub fn handle_event(_: &Model) -> io::Result<Option<MenuAction>> {
 
 pub fn handle_key(key: event::KeyEvent) -> Option<MenuAction> {
     match key.code {
-        KeyCode::Char(' ') => Some(MenuAction::StartGame),
+        KeyCode::Enter | KeyCode::Char(' ') => Some(MenuAction::StartGame),
         KeyCode::Esc => Some(MenuAction::Quit),
         _ => None,
     }

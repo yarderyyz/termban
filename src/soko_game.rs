@@ -48,9 +48,9 @@ pub fn handle_key(key: event::KeyEvent) -> Option<GameAction> {
         KeyCode::Right | KeyCode::Char('d') => Some(GameAction::Move(Direction::Right)),
 
         // View
-        KeyCode::Char('1') => Some(GameAction::ZoomClose),
+        KeyCode::Char('1') => Some(GameAction::ZoomFar),
         KeyCode::Char('2') => Some(GameAction::ZoomMiddle),
-        KeyCode::Char('3') => Some(GameAction::ZoomFar),
+        KeyCode::Char('3') => Some(GameAction::ZoomClose),
 
         _ => Some(GameAction::None),
     }
@@ -59,7 +59,7 @@ pub fn handle_key(key: event::KeyEvent) -> Option<GameAction> {
 pub fn update(model: &mut Model, msg: GameAction) -> Option<GameAction> {
     let game = &mut model.game;
     match msg {
-        GameAction::Quit => model.running_state = RunningState::Done,
+        GameAction::Quit => model.running_state = RunningState::Menu,
         GameAction::Move(direction) => {
             if let Some(new_level) = handle_move(&game.window.world, direction) {
                 game.history.push(game.window.world.clone());
@@ -72,15 +72,13 @@ pub fn update(model: &mut Model, msg: GameAction) -> Option<GameAction> {
             }
         }
         GameAction::Reset => {
-            game.history.push(game.window.world.clone());
-            if let Some(prev_level) = game.history.first() {
-                game.window.world = prev_level.clone();
-            }
+            game.refresh_window();
         }
         GameAction::ZoomClose => game.window.zoom = Zoom::Close,
         GameAction::ZoomMiddle => game.window.zoom = Zoom::Middle,
         GameAction::ZoomFar => game.window.zoom = Zoom::Far,
         GameAction::None => {}
+        GameAction::Win => {}
     };
     None
 }
@@ -98,16 +96,17 @@ pub fn handle_event(model: &mut Model) -> io::Result<Option<GameAction>> {
         .debug
         .push(format!("{:?}", &window.world.board.dim()));
 
-    if window.world.is_sokoban_solved() {
-        window.debug.push("You win!".to_string());
-    }
-
     if event::poll(Duration::from_millis(250))? {
         if let Event::Key(key) = event::read()? {
             if key.kind == event::KeyEventKind::Press {
                 return Ok(handle_key(key));
             }
         }
+    }
+
+    // Prevent handling key events, coincidentally, because it's solved!
+    if window.world.is_sokoban_solved() {
+        return Ok(Some(GameAction::Win));
     }
     Ok(None)
 }

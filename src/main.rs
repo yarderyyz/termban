@@ -2,6 +2,7 @@ use std::fs::File;
 use std::io::{self, Read};
 
 mod colors;
+mod copy_text;
 mod menu;
 mod render;
 mod soko_game;
@@ -26,9 +27,10 @@ fn main() -> io::Result<()> {
     let worlds = read_file(ban_filename)
         .map(|contents| soko_loader::parse_sokoban_worlds(&contents).unwrap())
         .unwrap();
-    let starting_world = 33;
+    let starting_world_i = 0;
+    let mut current_world_i = starting_world_i;
     let game_window = types::GameWindow {
-        world: worlds[starting_world].clone(),
+        world: worlds[starting_world_i].clone(),
         zoom: types::Zoom::Far,
         debug: Vec::new(),
     };
@@ -60,6 +62,15 @@ fn main() -> io::Result<()> {
 
                 // Handle events and map to a Message
                 let mut current_msg = soko_game::handle_event(&mut model)?;
+
+                // When you win a level, move to the next level!
+                // XXX: This has to happen before the while loop below. Why?
+                if let Some(types::GameAction::Win) = current_msg {
+                    current_world_i += 1;
+                    model.game.window.world = worlds[current_world_i].clone();
+                    model.game.reload_world();
+                    continue;
+                }
 
                 // Process updates as long as they return a non-None message
                 while current_msg.is_some() {
