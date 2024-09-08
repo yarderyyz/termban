@@ -11,7 +11,7 @@ use ratatui::{buffer::Buffer, layout::Rect, widgets::Widget};
 pub fn is_in_bounds<T>(position: &Coordinate, buffer: &Array2<T>) -> bool {
     let (height, width) = buffer.dim(); // Get the dimensions of the buffer
 
-    position.x < width || position.y < height
+    position.x < width && position.y < height
 }
 
 fn render_pixels(

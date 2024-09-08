@@ -200,6 +200,12 @@ impl GlyphCell {
     }
 }
 
+impl Default for GlyphCell {
+    fn default() -> Self {
+        GlyphCell::new()
+    }
+}
+
 pub type GlyphCells = Array2<GlyphCell>;
 
 #[derive(Debug, Clone)]
