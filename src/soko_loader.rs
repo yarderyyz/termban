@@ -91,7 +91,7 @@ fn get_board_dimensions(tokens: &[Token]) -> (usize, usize) {
 }
 
 // Return a Vector of each sokoban level (as a Vector of Tokens)
-fn group_sokoban_tokens(tokens: Vec<Token>) -> Vec<Vec<Token>> {
+fn group_sokoban_tokens(tokens: &[Token]) -> Vec<Vec<Token>> {
     // Collect all indexes where the element is alphabetic
     let mut text_indexes: Vec<usize> = tokens
         .iter()
@@ -115,8 +115,8 @@ fn group_sokoban_tokens(tokens: Vec<Token>) -> Vec<Vec<Token>> {
 }
 
 // Parses a Single level in the form of a Vec of tokens
-fn parse_sokoban_level(tokens: Vec<Token>) -> Result<World, String> {
-    match tokens.as_slice() {
+fn parse_sokoban_level(tokens: &[Token]) -> Result<World, String> {
+    match tokens {
         [Token::Text(title), level_toks @ ..] => {
             // Dimensions for the board
             let (x, y) = get_board_dimensions(level_toks);
@@ -181,9 +181,9 @@ fn parse_sokoban_level(tokens: Vec<Token>) -> Result<World, String> {
 
 pub fn parse_sokoban_worlds(sokoban_text: &str) -> Result<Vec<World>, String> {
     if let Some(tokens) = tokenize(sokoban_text) {
-        let worlds: Vec<World> = group_sokoban_tokens(tokens)
+        let worlds: Vec<World> = group_sokoban_tokens(&tokens)
             .iter()
-            .flat_map(|level| parse_sokoban_level(level.clone()))
+            .flat_map(|level| parse_sokoban_level(level))
             .collect();
         if worlds.is_empty() {
             return Err("No Levels were loaded".to_string());
