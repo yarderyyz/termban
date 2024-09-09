@@ -16,7 +16,7 @@ pub fn is_in_bounds<T>(position: &Coordinate, buffer: &Array2<T>) -> bool {
 
 fn render_pixels(
     pixel_size: usize,
-    item: RenderItem,
+    item: &RenderItem,
     glyph_buffer: GlyphCells,
 ) -> GlyphCells {
     match item {
@@ -68,7 +68,7 @@ fn draw_square(
     glyph_buffer
 }
 
-fn render_sprites(item: RenderItem, glyph_buffer: GlyphCells) -> GlyphCells {
+fn render_sprites(item: &RenderItem, glyph_buffer: GlyphCells) -> GlyphCells {
     match item {
         RenderItem::Board(board) => {
             let mut glyph_buffer = glyph_buffer.clone();
@@ -182,16 +182,16 @@ fn generate_render_graph(world: &World) -> RenderGraph {
 /// # Examples
 ///
 fn glypherize_node<F>(
-    node: RenderNode,
+    node: &RenderNode,
     glyph_buffer: GlyphCells,
     render_fn: &F,
 ) -> GlyphCells
 where
-    F: Fn(RenderItem, GlyphCells) -> GlyphCells,
+    F: Fn(&RenderItem, GlyphCells) -> GlyphCells,
 {
-    let glyph_buffer = render_fn(node.item, glyph_buffer);
-    if let Some(children) = node.children {
-        children.into_iter().fold(glyph_buffer, |buffer, child| {
+    let glyph_buffer = render_fn(&node.item, glyph_buffer);
+    if let Some(children) = &node.children {
+        children.iter().fold(glyph_buffer, |buffer, child| {
             glypherize_node(child, buffer, render_fn)
         })
     } else {
@@ -226,14 +226,14 @@ where
 ///
 fn glypherize_graph<F>(graph: RenderGraph, area: Rect, render_fn: F) -> GlyphCells
 where
-    F: Fn(RenderItem, GlyphCells) -> GlyphCells,
+    F: Fn(&RenderItem, GlyphCells) -> GlyphCells,
 {
     let glyph_buffer = GlyphCells::from_elem(
         (area.height as usize, area.width as usize),
         GlyphCell::new(),
     );
 
-    glypherize_node(graph.root, glyph_buffer, &render_fn)
+    glypherize_node(&graph.root, glyph_buffer, &render_fn)
 }
 
 /// Implements the `Widget` trait for the `GameWindow` struct, allowing it to be rendered within
