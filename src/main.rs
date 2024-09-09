@@ -5,6 +5,7 @@ mod colors;
 mod copy_text;
 mod menu;
 mod render;
+mod render_tests;
 mod soko_game;
 mod soko_loader;
 mod sprites;
