@@ -31,6 +31,7 @@ fn save_toml_file<T: Serialize>(filename: &str, toml: &T) -> Result<(), io::Erro
 
 fn main() -> io::Result<()> {
     tui::install_panic_hook();
+    let save_file = "saves.toml";
     let mut terminal = tui::init_terminal()?;
 
     let ban_filename = "./resources/levels/micro2.ban";
@@ -40,7 +41,7 @@ fn main() -> io::Result<()> {
         .map(|contents| soko_loader::parse_sokoban_worlds(&contents).unwrap())
         .unwrap();
 
-    let saves: Option<types::SaveFile> = read_file("saves.toml")
+    let saves: Option<types::SaveFile> = read_file(save_file)
         .map(|contents| toml::from_str(&contents).unwrap())
         .ok();
 
@@ -94,7 +95,7 @@ fn main() -> io::Result<()> {
                     model.game.reload_world();
 
                     saves.saves[0].level = current_world_i;
-                    save_toml_file("saves.toml", &saves)?;
+                    save_toml_file(save_file, &saves)?;
                     continue;
                 }
 
