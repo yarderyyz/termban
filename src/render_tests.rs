@@ -30,22 +30,22 @@ fn coordinate_is_inside_the_bounds() {
 fn coordinate_is_outside_the_bounds() {
     let glyph_cells_buffer: GlyphCells = Array2::default((5, 5));
 
-    assert!(is_in_bounds(
+    assert!(!is_in_bounds(
         &Coordinate { x: 100, y: 100 },
         &glyph_cells_buffer
     ));
 
-    assert!(is_in_bounds(
+    assert!(!is_in_bounds(
         &Coordinate { x: 4, y: 100 },
         &glyph_cells_buffer
     ));
 
-    assert!(is_in_bounds(
+    assert!(!is_in_bounds(
         &Coordinate { x: 100, y: 1 },
         &glyph_cells_buffer
     ));
 
-    assert!(is_in_bounds(
+    assert!(!is_in_bounds(
         &Coordinate { x: 5, y: 1 },
         &glyph_cells_buffer
     ));
