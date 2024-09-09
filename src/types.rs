@@ -3,6 +3,29 @@ use ratatui::style::Color;
 use crate::colors::{get_color, TolColor};
 use ndarray::Array2;
 
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct SaveFile {
+    pub saves: Vec<Save>,
+}
+impl SaveFile {
+    pub fn new() -> Self {
+        Self {
+            saves: vec![Save {
+                name: "My Save".to_string(),
+                level: 0,
+            }],
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Save {
+    pub name: String,
+    pub level: usize,
+}
+
 #[derive(Debug)]
 pub struct Game {
     pub window: GameWindow,
