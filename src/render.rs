@@ -92,7 +92,15 @@ fn render_sprites(item: RenderItem, glyph_buffer: GlyphCells) -> GlyphCells {
                     for (yi, row) in player_sprite.chars.rows().into_iter().enumerate()
                     {
                         for (xi, pixel) in row.iter().enumerate() {
-                            let index = [yi + (pos.y * 2), xi + (pos.x * 4)];
+                            let pos = Coordinate {
+                                y: yi + (pos.y * 2),
+                                x: xi + (pos.x * 4),
+                            };
+                            if !is_in_bounds(&pos, &glyph_buffer) {
+                                continue;
+                            }
+                            let index = pos.arr_index();
+
                             glyph_buffer[index].glyph = pixel.char;
                             if pixel.fg.is_some() {
                                 glyph_buffer[index].fg = pixel.fg;
