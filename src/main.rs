@@ -54,6 +54,8 @@ fn main() -> io::Result<()> {
         }
         None => types::SaveFile::new(),
     };
+    // TODO: what the hell is the business with this game window vs game paradigm?
+    // I need to make my thoughts clean on this when im not solving a problem
     let game_window = types::GameWindow {
         world: worlds[current_world_i].clone(),
         zoom: types::Zoom::Middle,
@@ -64,6 +66,8 @@ fn main() -> io::Result<()> {
         game: types::Game {
             history: Vec::new(),
             window: game_window,
+            worlds: worlds.clone(),
+            world_index: current_world_i,
         },
     };
 

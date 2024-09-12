@@ -29,6 +29,8 @@ pub struct Save {
 #[derive(Debug)]
 pub struct Game {
     pub window: GameWindow,
+    pub worlds: Vec<World>,
+    pub world_index: usize,
     pub history: Vec<World>,
 }
 
@@ -74,8 +76,8 @@ pub enum MenuAction {
 
 // #[derive(PartialEq)]
 pub enum LevelSelectAction {
-    // Up,
-    // Down,
+    Up,
+    Down,
     Select,
     // PageUp,
     // PageDown,
