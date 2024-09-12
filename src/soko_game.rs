@@ -115,7 +115,7 @@ pub fn handle_event(model: &mut Model) -> io::Result<Option<GameAction>> {
     }
 
     window.debug.push(format!(
-        "\n               Moves: {:?}",
+        "\n               Steps: {:?}",
         &model.game.history.len()
     ));
 
