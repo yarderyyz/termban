@@ -1,5 +1,6 @@
+use serde::Serialize;
 use std::fs::File;
-use std::io::{self, Read};
+use std::io::{self, Read, Write};
 
 mod colors;
 mod copy_text;
@@ -18,20 +19,42 @@ fn read_file(filename: &str) -> Result<String, io::Error> {
     Ok(contents)
 }
 
+fn save_toml_file<T: Serialize>(filename: &str, toml: &T) -> Result<(), io::Error> {
+    // Serialize the struct to a TOML string
+    let toml_string = toml::to_string(&toml).unwrap();
+
+    // Write the serialized string to a file
+    let mut file = File::create(filename)?;
+    file.write_all(toml_string.as_bytes())?;
+    Ok(())
+}
+
 fn main() -> io::Result<()> {
     tui::install_panic_hook();
+    let save_file = "saves.toml";
     let mut terminal = tui::init_terminal()?;
 
     let ban_filename = "./resources/levels/micro2.ban";
+
     // TODO: actually handle errors here
-    //
     let worlds = read_file(ban_filename)
         .map(|contents| soko_loader::parse_sokoban_worlds(&contents).unwrap())
         .unwrap();
-    let starting_world_i = 0;
-    let mut current_world_i = starting_world_i;
+
+    let saves: Option<types::SaveFile> = read_file(save_file)
+        .map(|contents| toml::from_str(&contents).unwrap())
+        .ok();
+
+    let mut current_world_i = 0;
+    let mut saves = match saves {
+        Some(saves) => {
+            current_world_i = saves.saves[0].level;
+            saves
+        }
+        None => types::SaveFile::new(),
+    };
     let game_window = types::GameWindow {
-        world: worlds[starting_world_i].clone(),
+        world: worlds[current_world_i].clone(),
         zoom: types::Zoom::Middle,
         debug: Vec::new(),
     };
@@ -70,6 +93,9 @@ fn main() -> io::Result<()> {
                     current_world_i += 1;
                     model.game.window.world = worlds[current_world_i].clone();
                     model.game.reload_world();
+
+                    saves.saves[0].level = current_world_i;
+                    save_toml_file(save_file, &saves)?;
                     continue;
                 }
 

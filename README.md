@@ -15,7 +15,7 @@ To play the Rust Terminal Sokoban, you'll need:
 Clone the repository and build the game using Cargo:
 
 ```bash
-git clone https://github.com/lee-gauthier/termban.git
+git clone https://github.com/yarderyyz/termban.git
 cd termban
 cargo build --release
 
