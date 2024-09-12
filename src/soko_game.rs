@@ -44,10 +44,18 @@ pub fn handle_key(key: event::KeyEvent) -> Option<GameAction> {
         KeyCode::Char('r') => Some(GameAction::Reset),
 
         // Movement
-        KeyCode::Up | KeyCode::Char('w') => Some(GameAction::Move(Direction::Up)),
-        KeyCode::Left | KeyCode::Char('a') => Some(GameAction::Move(Direction::Left)),
-        KeyCode::Down | KeyCode::Char('s') => Some(GameAction::Move(Direction::Down)),
-        KeyCode::Right | KeyCode::Char('d') => Some(GameAction::Move(Direction::Right)),
+        KeyCode::Up | KeyCode::Char('w') | KeyCode::Char('W') => {
+            Some(GameAction::Move(Direction::Up))
+        }
+        KeyCode::Left | KeyCode::Char('a') | KeyCode::Char('A') => {
+            Some(GameAction::Move(Direction::Left))
+        }
+        KeyCode::Down | KeyCode::Char('s') | KeyCode::Char('S') => {
+            Some(GameAction::Move(Direction::Down))
+        }
+        KeyCode::Right | KeyCode::Char('d') | KeyCode::Char('D') => {
+            Some(GameAction::Move(Direction::Right))
+        }
 
         // View
         KeyCode::Char('1') => Some(GameAction::ZoomFar),
