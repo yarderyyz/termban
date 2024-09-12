@@ -31,3 +31,8 @@ RULES:
 GOAL:
     The puzzle is solved when every GOAL tile is occupied by a BOX.
 ";
+
+pub const LEVEL_SELECT: &str = "
+LEVEL SELECT (MICROBAN I)
+=========================
+";

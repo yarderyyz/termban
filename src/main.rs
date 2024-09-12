@@ -4,6 +4,7 @@ use std::io::{self, Read, Write};
 
 mod colors;
 mod copy_text;
+mod level_select;
 mod menu;
 mod render;
 mod render_tests;
@@ -102,6 +103,17 @@ fn main() -> io::Result<()> {
                 // Process updates as long as they return a non-None message
                 while current_msg.is_some() {
                     current_msg = soko_game::update(&mut model, current_msg.unwrap());
+                }
+            }
+            types::RunningState::LevelSelect => {
+                terminal.draw(|f| level_select::view(&mut model, f))?;
+                // Handle events and map to a Message
+                let mut current_msg = level_select::handle_event(&model)?;
+
+                // Process updates as long as they return a non-None message
+                while current_msg.is_some() {
+                    current_msg =
+                        level_select::update(&mut model, current_msg.unwrap());
                 }
             }
         }

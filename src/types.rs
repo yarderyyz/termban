@@ -58,8 +58,10 @@ pub struct Model {
 }
 
 #[derive(Debug, PartialEq, Eq)]
+// XXX: Ambiguous name?
 pub enum RunningState {
     Menu,
+    LevelSelect,
     Game,
     Done,
 }
@@ -67,6 +69,16 @@ pub enum RunningState {
 #[derive(PartialEq)]
 pub enum MenuAction {
     StartGame,
+    Quit,
+}
+
+// #[derive(PartialEq)]
+pub enum LevelSelectAction {
+    // Up,
+    // Down,
+    Select,
+    // PageUp,
+    // PageDown,
     Quit,
 }
 

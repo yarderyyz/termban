@@ -36,12 +36,16 @@ pub fn view(model: &mut Model, frame: &mut Frame) {
     );
 }
 
+// TODO: make a one sized fits all handler for "idiot mode" which is when a user is validly
+// in capsloc mode like an idiot. this happens more than you'd ever imagine. a key is right next to it!
 pub fn handle_key(key: event::KeyEvent) -> Option<GameAction> {
     match key.code {
         // Game state
         KeyCode::Esc => Some(GameAction::Quit),
-        KeyCode::Char('z') | KeyCode::Char('u') => Some(GameAction::Undo),
-        KeyCode::Char('r') => Some(GameAction::Reset),
+        KeyCode::Char('z') | KeyCode::Char('Z') | KeyCode::Char('u') => {
+            Some(GameAction::Undo)
+        }
+        KeyCode::Char('r') | KeyCode::Char('R') => Some(GameAction::Reset),
 
         // Movement
         KeyCode::Up | KeyCode::Char('w') | KeyCode::Char('W') => {
@@ -69,7 +73,7 @@ pub fn handle_key(key: event::KeyEvent) -> Option<GameAction> {
 pub fn update(model: &mut Model, msg: GameAction) -> Option<GameAction> {
     let game = &mut model.game;
     match msg {
-        GameAction::Quit => model.running_state = RunningState::Menu,
+        GameAction::Quit => model.running_state = RunningState::LevelSelect,
         GameAction::Move(direction) => {
             if let Some(new_level) = handle_move(&game.window.world, direction) {
                 game.history.push(game.window.world.clone());

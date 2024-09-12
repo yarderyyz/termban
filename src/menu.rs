@@ -16,7 +16,7 @@ pub fn view(_model: &mut Model, frame: &mut Frame) {
 pub fn update(model: &mut Model, msg: MenuAction) -> Option<MenuAction> {
     match msg {
         MenuAction::StartGame => {
-            model.running_state = RunningState::Game;
+            model.running_state = RunningState::LevelSelect;
         }
         MenuAction::Quit => {
             // You can handle cleanup and exit here
