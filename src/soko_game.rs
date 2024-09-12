@@ -29,7 +29,9 @@ pub fn view(model: &mut Model, frame: &mut Frame) {
 
     let text = game_window.debug.join("\n");
     frame.render_widget(
-        Paragraph::new(text).block(Block::bordered().title("debug")),
+        Paragraph::new(text).block(
+            Block::bordered().title("~MICROBAN I: MOVE the BLOCKS onto the GOALS!~"),
+        ),
         right_area,
     );
 }
@@ -42,10 +44,18 @@ pub fn handle_key(key: event::KeyEvent) -> Option<GameAction> {
         KeyCode::Char('r') => Some(GameAction::Reset),
 
         // Movement
-        KeyCode::Up | KeyCode::Char('w') => Some(GameAction::Move(Direction::Up)),
-        KeyCode::Left | KeyCode::Char('a') => Some(GameAction::Move(Direction::Left)),
-        KeyCode::Down | KeyCode::Char('s') => Some(GameAction::Move(Direction::Down)),
-        KeyCode::Right | KeyCode::Char('d') => Some(GameAction::Move(Direction::Right)),
+        KeyCode::Up | KeyCode::Char('w') | KeyCode::Char('W') => {
+            Some(GameAction::Move(Direction::Up))
+        }
+        KeyCode::Left | KeyCode::Char('a') | KeyCode::Char('A') => {
+            Some(GameAction::Move(Direction::Left))
+        }
+        KeyCode::Down | KeyCode::Char('s') | KeyCode::Char('S') => {
+            Some(GameAction::Move(Direction::Down))
+        }
+        KeyCode::Right | KeyCode::Char('d') | KeyCode::Char('D') => {
+            Some(GameAction::Move(Direction::Right))
+        }
 
         // View
         KeyCode::Char('1') => Some(GameAction::ZoomFar),
@@ -87,14 +97,14 @@ pub fn handle_event(model: &mut Model) -> io::Result<Option<GameAction>> {
     let window = &mut model.game.window;
     window.debug = Vec::new();
 
-    for entity in window.world.entities.iter() {
-        if let Entity::Player(player) = entity {
-            window.debug.push(format!("{:?}", player.position.clone()));
-        }
-    }
-    window
-        .debug
-        .push(format!("{:?}", &window.world.board.dim()));
+    // for entity in window.world.entities.iter() {
+    //     if let Entity::Player(player) = entity {
+    //         window.debug.push(format!("{:?}", player.position.clone()));
+    //     }
+    // }
+    // window
+    //     .debug
+    //     .push(format!("{:?}", &window.world.board.dim()));
 
     if event::poll(Duration::from_millis(250))? {
         if let Event::Key(key) = event::read()? {
@@ -103,6 +113,13 @@ pub fn handle_event(model: &mut Model) -> io::Result<Option<GameAction>> {
             }
         }
     }
+
+    window.debug.push(format!(
+        "\n                Steps: {:?}
+        Best Solution: X
+        \ntbd... ",
+        &model.game.history.len()
+    ));
 
     // Prevent handling key events, coincidentally, because it's solved!
     if window.world.is_sokoban_solved() {
