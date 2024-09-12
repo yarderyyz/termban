@@ -116,7 +116,8 @@ pub fn handle_event(model: &mut Model) -> io::Result<Option<GameAction>> {
 
     window.debug.push(format!(
         "\n                Steps: {:?}
-        Best Solution: X",
+        Best Solution: X
+        \ntbd... ",
         &model.game.history.len()
     ));
 
