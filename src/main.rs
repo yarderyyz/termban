@@ -32,7 +32,7 @@ fn main() -> io::Result<()> {
     let mut current_world_i = starting_world_i;
     let game_window = types::GameWindow {
         world: worlds[starting_world_i].clone(),
-        zoom: types::Zoom::Far,
+        zoom: types::Zoom::Middle,
         debug: Vec::new(),
     };
     let mut model = types::Model {

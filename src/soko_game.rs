@@ -29,7 +29,9 @@ pub fn view(model: &mut Model, frame: &mut Frame) {
 
     let text = game_window.debug.join("\n");
     frame.render_widget(
-        Paragraph::new(text).block(Block::bordered().title("debug")),
+        Paragraph::new(text).block(
+            Block::bordered().title("~MICROBAN I: MOVE the BLOCKS onto the GOALS!~"),
+        ),
         right_area,
     );
 }
@@ -87,14 +89,14 @@ pub fn handle_event(model: &mut Model) -> io::Result<Option<GameAction>> {
     let window = &mut model.game.window;
     window.debug = Vec::new();
 
-    for entity in window.world.entities.iter() {
-        if let Entity::Player(player) = entity {
-            window.debug.push(format!("{:?}", player.position.clone()));
-        }
-    }
-    window
-        .debug
-        .push(format!("{:?}", &window.world.board.dim()));
+    // for entity in window.world.entities.iter() {
+    //     if let Entity::Player(player) = entity {
+    //         window.debug.push(format!("{:?}", player.position.clone()));
+    //     }
+    // }
+    // window
+    //     .debug
+    //     .push(format!("{:?}", &window.world.board.dim()));
 
     if event::poll(Duration::from_millis(250))? {
         if let Event::Key(key) = event::read()? {
@@ -103,6 +105,11 @@ pub fn handle_event(model: &mut Model) -> io::Result<Option<GameAction>> {
             }
         }
     }
+
+    window.debug.push(format!(
+        "\n               Moves: {:?}",
+        &model.game.history.len()
+    ));
 
     // Prevent handling key events, coincidentally, because it's solved!
     if window.world.is_sokoban_solved() {
