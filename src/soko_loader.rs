@@ -122,7 +122,7 @@ fn parse_sokoban_level(tokens: &[Token]) -> Result<World, String> {
             let (x, y) = get_board_dimensions(level_toks);
 
             // Create an initial board with default values (e.g., all `Wall`)
-            let mut board = Array2::from_elem((y, x), Tile::Empty);
+            let mut board = Array2::from_elem((y, x), Tile::Floor);
             let mut entities = Vec::new();
 
             let (mut x, mut y): (usize, usize) = (0, 0);
@@ -165,11 +165,12 @@ fn parse_sokoban_level(tokens: &[Token]) -> Result<World, String> {
                 }
                 x += 1;
             }
+            let board = cull_outer_tiles(&mut board);
 
             // Create an instance of Level
             let level = World {
                 name: title.to_string(),
-                board,
+                board: board.clone(),
                 entities,
                 camera_position: Coordinate { x: 0, y: 0 },
             };
@@ -177,6 +178,32 @@ fn parse_sokoban_level(tokens: &[Token]) -> Result<World, String> {
         }
         _ => Err("Level must start with a title".to_string()),
     }
+}
+
+/// In the level format we cant tell what tiles are floors and what tiles are empty
+/// This function takes a board, and working from the outside of the board in culls
+/// any floor tiles with an empty neighbour.
+/// XXX: This isn't perfect yet and can miss some tiles. Fixme when less late
+fn cull_outer_tiles(board: &mut Array2<Tile>) -> &Array2<Tile> {
+    let (height, width) = board.dim();
+    for yi in 0..(height) {
+        for xi in 0..(width) {
+            if let Tile::Floor = board[[yi, xi]] {
+                if yi == 0 || xi == 0 || yi == height - 1 || xi == width - 1 {
+                    board[[yi, xi]] = Tile::Empty;
+                    continue;
+                }
+                let indexes = [[yi + 1, xi], [yi - 1, xi], [yi, xi + 1], [yi, xi - 1]];
+                let any_empty = indexes
+                    .into_iter()
+                    .any(|index| matches!(board[index], Tile::Empty));
+                if any_empty {
+                    board[[yi, xi]] = Tile::Empty;
+                }
+            }
+        }
+    }
+    board
 }
 
 pub fn parse_sokoban_worlds(sokoban_text: &str) -> Result<Vec<World>, String> {

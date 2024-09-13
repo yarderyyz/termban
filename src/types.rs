@@ -101,6 +101,7 @@ pub enum Zoom {
 #[derive(Debug, Clone)]
 pub enum Tile {
     Empty,
+    Floor,
     Wall,
     Goal,
 }
@@ -194,7 +195,8 @@ impl Tile {
         match self {
             Tile::Wall => Some(get_color(TolColor::LigLightBlue)),
             Tile::Goal => Some(get_color(TolColor::BriGrey)),
-            Tile::Empty => Some(get_color(TolColor::CstLigBlue)),
+            Tile::Floor => Some(get_color(TolColor::CstLigBlue)),
+            Tile::Empty => None,
         }
     }
 }
