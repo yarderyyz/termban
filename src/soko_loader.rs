@@ -165,12 +165,18 @@ fn parse_sokoban_level(tokens: &[Token]) -> Result<World, String> {
                 }
                 x += 1;
             }
-            let board = cull_outer_tiles(&mut board);
+
+            // XXX: Fix call_outer_tiles so we only need to call once
+            let (height, width) = board.dim();
+            let max_dim = std::cmp::max(height, width);
+            for _ in 0..(max_dim / 2) {
+                cull_outer_tiles(&mut board);
+            }
 
             // Create an instance of Level
             let level = World {
                 name: title.to_string(),
-                board: board.clone(),
+                board,
                 entities,
                 camera_position: Coordinate { x: 0, y: 0 },
             };
