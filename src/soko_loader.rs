@@ -217,10 +217,7 @@ pub fn cull_tiles(index: [usize; 2], board: &mut Array2<Tile>) -> &Array2<Tile> 
     let last_col = width - 1;
     let last_row = height - 1;
 
-    // We'll use wrapping subration here because the adjacent_indexes slice further down is set up
-    // to not include the wrapping indexes.
     let directions = [(1, 0), (-1, 0), (0, 1), (0, -1)];
-
     let adjacent_indexes: Vec<(usize, usize)> = directions
         .into_iter()
         .filter_map(|(dir_y, dir_x)| {
