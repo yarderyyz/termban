@@ -214,12 +214,12 @@ mod tests {
             [Tile::Empty, Tile::Floor, Tile::Empty],
             [Tile::Wall, Tile::Empty, Tile::Wall],
         ];
+        // Expected board remains the same
+        let expected = board.clone();
 
         // Apply culling
         cull_outer_tiles(&mut board);
 
-        // Expected board remains the same
-        let expected = board.clone();
         assert_eq!(board, expected);
     }
 
@@ -231,12 +231,12 @@ mod tests {
             [Tile::Wall, Tile::Floor, Tile::Wall],
             [Tile::Wall, Tile::Wall, Tile::Wall],
         ];
+        // Expected board remains the same since the inner Floor tile is not connected to the edge
+        let expected = board.clone();
 
         // Apply culling
         cull_outer_tiles(&mut board);
 
-        // Expected board remains the same since the inner Floor tile is not connected to the edge
-        let expected = board.clone();
         assert_eq!(board, expected);
     }
 
@@ -307,12 +307,12 @@ mod tests {
             [Tile::Wall, Tile::Floor, Tile::Floor, Tile::Floor, Tile::Wall],
             [Tile::Wall, Tile::Wall, Tile::Wall, Tile::Wall, Tile::Wall],
         ];
+        // Expected board remains the same since the Floor tiles are not connected to the edge
+        let expected = board.clone();
 
         // Apply culling
         cull_outer_tiles(&mut board);
 
-        // Expected board remains the same since the Floor tiles are not connected to the edge
-        let expected = board.clone();
         assert_eq!(board, expected);
     }
 }
