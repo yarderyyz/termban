@@ -101,15 +101,6 @@ pub fn handle_event(model: &mut Model) -> io::Result<Option<GameAction>> {
     let window = &mut model.game.window;
     window.debug = Vec::new();
 
-    // for entity in window.world.entities.iter() {
-    //     if let Entity::Player(player) = entity {
-    //         window.debug.push(format!("{:?}", player.position.clone()));
-    //     }
-    // }
-    // window
-    //     .debug
-    //     .push(format!("{:?}", &window.world.board.dim()));
-
     if event::poll(Duration::from_millis(250))? {
         if let Event::Key(key) = event::read()? {
             if key.kind == event::KeyEventKind::Press {
