@@ -186,11 +186,22 @@ fn parse_sokoban_level(tokens: &[Token]) -> Result<World, String> {
 /// any floor tiles with an empty neighbour.
 pub fn cull_outer_tiles(board: &mut Array2<Tile>) -> &Array2<Tile> {
     let (height, width) = board.dim();
-    for yi in 0..(height) {
-        for xi in 0..(width) {
-            if matches!(board[[yi, xi]], Tile::Floor) {
-                cull_tiles([yi, xi], board);
-            }
+    // Check first and last column for Floor tiles to cull
+    for yi in 0..height {
+        if matches!(board[[yi, 0]], Tile::Floor) {
+            cull_tiles([yi, 0], board);
+        }
+        if matches!(board[[yi, width - 1]], Tile::Floor) {
+            cull_tiles([yi, width - 1], board);
+        }
+    }
+    // Check first and last row for Floor tiles to cull
+    for xi in 0..width {
+        if matches!(board[[0, xi]], Tile::Floor) {
+            cull_tiles([0, xi], board);
+        }
+        if matches!(board[[height - 1, xi]], Tile::Floor) {
+            cull_tiles([height - 1, xi], board);
         }
     }
     board
