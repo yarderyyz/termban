@@ -106,20 +106,20 @@ pub fn handle_event(model: &mut Model) -> io::Result<Option<GameAction>> {
     //     .debug
     //     .push(format!("{:?}", &window.world.board.dim()));
 
-    if event::poll(Duration::from_millis(250))? {
-        if let Event::Key(key) = event::read()? {
-            if key.kind == event::KeyEventKind::Press {
-                return Ok(handle_key(key));
-            }
-        }
-    }
-
     window.debug.push(format!(
         "\n                Steps: {:?}
         Best Solution: X
         \ntbd... ",
         &model.game.history.len()
     ));
+
+    if event::poll(Duration::from_millis(50))? {
+        if let Event::Key(key) = event::read()? {
+            if key.kind == event::KeyEventKind::Press {
+                return Ok(handle_key(key));
+            }
+        }
+    }
 
     // Prevent handling key events, coincidentally, because it's solved!
     if window.world.is_sokoban_solved() {
