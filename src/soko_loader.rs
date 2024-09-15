@@ -247,7 +247,7 @@ pub fn cull_tiles(index: [usize; 2], board: &mut Array2<Tile>) -> &Array2<Tile> 
     if any_empty || is_edge_tile {
         board[[yi, xi]] = Tile::Empty;
         for index in adjacent_indexes {
-            if let Tile::Floor = board[index] {
+            if matches!(board[index], Tile::Floor) {
                 cull_tiles(index.into(), board);
             }
         }
