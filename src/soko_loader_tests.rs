@@ -10,7 +10,7 @@ mod tests {
         let mut board = Array2::from_elem((3, 3), Tile::Floor);
 
         // Cull the tile at position (0, 1) which is on the top edge
-        cull_tiles([0, 1], &mut board);
+        cull_tiles((0, 1), &mut board);
 
         // The tile at (0,1) should become Empty
         assert_eq!(board[[0, 1]], Tile::Empty);
@@ -25,7 +25,7 @@ mod tests {
         board[[1, 1]] = Tile::Empty;
 
         // Cull the tile at position (1, 0) which is adjacent to an Empty tile
-        cull_tiles([1, 0], &mut board);
+        cull_tiles((1, 0), &mut board);
 
         // The tile at (1, 0) should become Empty
         assert_eq!(board[[1, 0]], Tile::Empty);
@@ -40,7 +40,7 @@ mod tests {
         board[[0, 1]] = Tile::Empty;
 
         // Cull the tile at position (1, 1), which is adjacent to (0,1)
-        cull_tiles([1, 1], &mut board);
+        cull_tiles((1, 1), &mut board);
 
         // The tile at (1,1) and its adjacent tiles should become Empty recursively
         assert_eq!(board[[1, 1]], Tile::Empty);
@@ -59,7 +59,7 @@ mod tests {
         board[[1, 2]] = Tile::Goal;
 
         // Cull starting from position (0, 1)
-        cull_tiles([0, 1], &mut board);
+        cull_tiles((0, 1), &mut board);
 
         // The Wall and Goal should remain unaffected
         assert_eq!(board[[1, 1]], Tile::Wall);
@@ -77,7 +77,7 @@ mod tests {
         let mut board = Array2::from_elem((5, 5), Tile::Floor);
 
         // Cull starting from position (2, 2) (center tile)
-        cull_tiles([2, 2], &mut board);
+        cull_tiles((2, 2), &mut board);
 
         // Since the center tile is not adjacent to any Empty tiles or edges, it should remain Floor
         assert_eq!(board[[2, 2]], Tile::Floor);
@@ -89,7 +89,7 @@ mod tests {
         let mut board = Array2::from_elem((5, 5), Tile::Floor);
 
         // Cull starting from position (0, 2) (top edge)
-        cull_tiles([0, 2], &mut board);
+        cull_tiles((0, 2), &mut board);
 
         // Tiles should be culled recursively inwards from the edge
         // The tiles in the first row should be Empty
@@ -108,7 +108,7 @@ mod tests {
         let mut board = Array2::from_elem((3, 3), Tile::Floor);
 
         // Cull starting from position (0, 0) (top-left corner)
-        cull_tiles([0, 0], &mut board);
+        cull_tiles((0, 0), &mut board);
 
         // Ensure that the tiles are culled correctly without index underflow
         assert_eq!(board[[0, 0]], Tile::Empty);

@@ -189,31 +189,31 @@ pub fn cull_outer_tiles(board: &mut Array2<Tile>) -> &Array2<Tile> {
     // Check first and last column for Floor tiles to cull
     for yi in 0..height {
         if matches!(board[[yi, 0]], Tile::Floor) {
-            cull_tiles([yi, 0], board);
+            cull_tiles((yi, 0), board);
         }
         if matches!(board[[yi, width - 1]], Tile::Floor) {
-            cull_tiles([yi, width - 1], board);
+            cull_tiles((yi, width - 1), board);
         }
     }
     // Check first and last row for Floor tiles to cull
     for xi in 0..width {
         if matches!(board[[0, xi]], Tile::Floor) {
-            cull_tiles([0, xi], board);
+            cull_tiles((0, xi), board);
         }
         if matches!(board[[height - 1, xi]], Tile::Floor) {
-            cull_tiles([height - 1, xi], board);
+            cull_tiles((height - 1, xi), board);
         }
     }
     board
 }
 
-pub fn cull_tiles(index: [usize; 2], board: &mut Array2<Tile>) -> &Array2<Tile> {
+pub fn cull_tiles(index: (usize, usize), board: &mut Array2<Tile>) -> &Array2<Tile> {
     // A guard so we don't cull any non-floor tiles
     if !matches!(board[index], Tile::Floor) {
         return board;
     }
     let (height, width) = board.dim();
-    let [yi, xi] = index;
+    let (yi, xi) = index;
     let last_col = width - 1;
     let last_row = height - 1;
 
@@ -248,7 +248,7 @@ pub fn cull_tiles(index: [usize; 2], board: &mut Array2<Tile>) -> &Array2<Tile> 
         board[[yi, xi]] = Tile::Empty;
         for index in adjacent_indexes {
             if matches!(board[index], Tile::Floor) {
-                cull_tiles(index.into(), board);
+                cull_tiles(index, board);
             }
         }
     }
