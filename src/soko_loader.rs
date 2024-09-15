@@ -228,6 +228,10 @@ pub fn cull_tiles(index: [usize; 2], board: &mut Array2<Tile>) -> &Array2<Tile> 
     let [bottom, top, right, left] = directions;
 
     // Figure out what directions we need to check for adjacent emptys
+    //
+    // We could do something programatic here, but this code should never change so I feel that
+    // iterating the edgecases is more clear to the reader than writing some loop to conditionally
+    // build this slice.
     let adjacent_indexes: &[[usize; 2]] = if xi == 0 && yi == 0 {
         &[bottom, right]
     } else if xi == last_col && yi == last_row {
@@ -252,15 +256,15 @@ pub fn cull_tiles(index: [usize; 2], board: &mut Array2<Tile>) -> &Array2<Tile> 
     let is_edge_tile = adjacent_indexes.len() != 4;
     let any_empty = adjacent_indexes
         .iter()
-        .any(|index| matches!(board[*index], Tile::Empty));
+        .any(|&index| matches!(board[index], Tile::Empty));
 
     // If any of the adjacent tiles are Empty or are edge tiles we'll set the current tile to
     // Empty, and recursively check if adjacent tiles should be culled
     if any_empty || is_edge_tile {
         board[[yi, xi]] = Tile::Empty;
-        for index in adjacent_indexes {
-            if let Tile::Floor = board[*index] {
-                cull_tiles(*index, board);
+        for &index in adjacent_indexes {
+            if let Tile::Floor = board[index] {
+                cull_tiles(index, board);
             }
         }
     }
