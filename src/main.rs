@@ -54,8 +54,6 @@ fn main() -> io::Result<()> {
         }
         None => types::SaveFile::new(),
     };
-    // TODO: what the hell is the business with this game window vs game paradigm?
-    // I need to make my thoughts clean on this when im not solving a problem
     let game_window = types::GameWindow {
         world: worlds[current_world_i].clone(),
         zoom: types::Zoom::Middle,
@@ -95,11 +93,8 @@ fn main() -> io::Result<()> {
                 // When you win a level, move to the next level!
                 // XXX: This has to happen before the while loop below. Why?
                 if let Some(types::GameAction::Win) = current_msg {
-                    current_world_i += 1;
-                    model.game.window.world = worlds[current_world_i].clone();
-                    model.game.reload_world();
-
-                    saves.saves[0].level = current_world_i;
+                    model.game.increment_level();
+                    saves.saves[0].level = model.game.world_index;
                     save_toml_file(save_file, &saves)?;
                     continue;
                 }

@@ -35,6 +35,20 @@ pub struct Game {
 }
 
 impl Game {
+    pub fn change_level(self: &mut Game, level_index: usize) {
+        self.world_index = level_index;
+        self.window.world = self.worlds[self.world_index].clone();
+        self.reload_world();
+    }
+
+    pub fn increment_level(self: &mut Game) {
+        self.change_level(self.world_index + 1);
+    }
+
+    pub fn decrement_level(self: &mut Game) {
+        self.change_level(self.world_index - 1);
+    }
+
     /// Erasing your history, erases your past
     pub fn erase_history(self: &mut Game) {
         self.history.clear();
