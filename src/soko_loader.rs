@@ -219,38 +219,25 @@ pub fn cull_tiles(index: [usize; 2], board: &mut Array2<Tile>) -> &Array2<Tile> 
 
     // We'll use wrapping subration here because the adjacent_indexes slice further down is set up
     // to not include the wrapping indexes.
-    let directions = [
-        [yi + 1, xi],
-        [yi.wrapping_sub(1), xi],
-        [yi, xi + 1],
-        [yi, xi.wrapping_sub(1)],
-    ];
-    let [bottom, top, right, left] = directions;
+    let directions = [(1, 0), (-1, 0), (0, 1), (0, -1)];
 
-    // Figure out what directions we need to check for adjacent emptys
-    //
-    // We could do something programatic here, but this code should never change so I feel that
-    // iterating the edgecases is more clear to the reader than writing some loop to conditionally
-    // build this slice.
-    let adjacent_indexes: &[[usize; 2]] = if xi == 0 && yi == 0 {
-        &[bottom, right]
-    } else if xi == last_col && yi == last_row {
-        &[top, left]
-    } else if xi == 0 && yi == last_row {
-        &[top, right]
-    } else if xi == last_col && yi == 0 {
-        &[bottom, left]
-    } else if xi == 0 {
-        &[top, bottom, right]
-    } else if yi == 0 {
-        &[bottom, left, right]
-    } else if xi == last_col {
-        &[top, bottom, left]
-    } else if yi == last_row {
-        &[top, left, right]
-    } else {
-        &[top, bottom, left, right]
-    };
+    let adjacent_indexes: Vec<(usize, usize)> = directions
+        .into_iter()
+        .filter_map(|(dir_y, dir_x)| {
+            let new_y = yi as i32 + dir_y;
+            let new_x = xi as i32 + dir_x;
+            // filter out directions that will cause an overflow
+            if new_y < 0
+                || new_x < 0
+                || new_y > last_row as i32
+                || new_x > last_col as i32
+            {
+                None
+            } else {
+                Some((new_y as usize, new_x as usize))
+            }
+        })
+        .collect();
 
     // If the length of adjacent_indexes is not 4 that means we are on
     let is_edge_tile = adjacent_indexes.len() != 4;
@@ -262,9 +249,9 @@ pub fn cull_tiles(index: [usize; 2], board: &mut Array2<Tile>) -> &Array2<Tile> 
     // Empty, and recursively check if adjacent tiles should be culled
     if any_empty || is_edge_tile {
         board[[yi, xi]] = Tile::Empty;
-        for &index in adjacent_indexes {
+        for index in adjacent_indexes {
             if let Tile::Floor = board[index] {
-                cull_tiles(index, board);
+                cull_tiles(index.into(), board);
             }
         }
     }
