@@ -9,6 +9,7 @@ mod render;
 mod render_tests;
 mod soko_game;
 mod soko_loader;
+mod soko_loader_tests;
 mod sprites;
 mod types;
 

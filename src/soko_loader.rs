@@ -166,12 +166,7 @@ fn parse_sokoban_level(tokens: &[Token]) -> Result<World, String> {
                 x += 1;
             }
 
-            // XXX: Fix call_outer_tiles so we only need to call once
-            let (height, width) = board.dim();
-            let max_dim = std::cmp::max(height, width);
-            for _ in 0..(max_dim / 2) {
-                cull_outer_tiles(&mut board);
-            }
+            cull_outer_tiles(&mut board);
 
             // Create an instance of Level
             let level = World {
@@ -189,23 +184,72 @@ fn parse_sokoban_level(tokens: &[Token]) -> Result<World, String> {
 /// In the level format we cant tell what tiles are floors and what tiles are empty
 /// This function takes a board, and working from the outside of the board in culls
 /// any floor tiles with an empty neighbour.
-/// XXX: This isn't perfect yet and can miss some tiles. Fixme when less late
-fn cull_outer_tiles(board: &mut Array2<Tile>) -> &Array2<Tile> {
+pub fn cull_outer_tiles(board: &mut Array2<Tile>) -> &Array2<Tile> {
     let (height, width) = board.dim();
     for yi in 0..(height) {
         for xi in 0..(width) {
-            if let Tile::Floor = board[[yi, xi]] {
-                if yi == 0 || xi == 0 || yi == height - 1 || xi == width - 1 {
-                    board[[yi, xi]] = Tile::Empty;
-                    continue;
-                }
-                let indexes = [[yi + 1, xi], [yi - 1, xi], [yi, xi + 1], [yi, xi - 1]];
-                let any_empty = indexes
-                    .into_iter()
-                    .any(|index| matches!(board[index], Tile::Empty));
-                if any_empty {
-                    board[[yi, xi]] = Tile::Empty;
-                }
+            if matches!(board[[yi, xi]], Tile::Floor) {
+                cull_tiles([yi, xi], board);
+            }
+        }
+    }
+    board
+}
+
+pub fn cull_tiles(index: [usize; 2], board: &mut Array2<Tile>) -> &Array2<Tile> {
+    // A guard so we don't cull any non-floor tiles
+    if !matches!(board[index], Tile::Floor) {
+        return board;
+    }
+    let (height, width) = board.dim();
+    let [yi, xi] = index;
+    let last_col = width - 1;
+    let last_row = height - 1;
+
+    // We'll use wrapping subration here because the adjacent_indexes slice further down is set up
+    // to not include the wrapping indexes.
+    let directions = [
+        [yi + 1, xi],
+        [yi.wrapping_sub(1), xi],
+        [yi, xi + 1],
+        [yi, xi.wrapping_sub(1)],
+    ];
+    let [bottom, top, right, left] = directions;
+
+    // Figure out what directions we need to check for adjacent emptys
+    let adjacent_indexes: &[[usize; 2]] = if xi == 0 && yi == 0 {
+        &[bottom, right]
+    } else if xi == last_col && yi == last_row {
+        &[top, left]
+    } else if xi == 0 && yi == last_row {
+        &[top, right]
+    } else if xi == last_col && yi == 0 {
+        &[bottom, left]
+    } else if xi == 0 {
+        &[top, bottom, right]
+    } else if yi == 0 {
+        &[bottom, left, right]
+    } else if xi == last_col {
+        &[top, bottom, left]
+    } else if yi == last_row {
+        &[top, left, right]
+    } else {
+        &[top, bottom, left, right]
+    };
+
+    // If the length of adjacent_indexes is not 4 that means we are on
+    let is_edge_tile = adjacent_indexes.len() != 4;
+    let any_empty = adjacent_indexes
+        .iter()
+        .any(|index| matches!(board[*index], Tile::Empty));
+
+    // If any of the adjacent tiles are Empty or are edge tiles we'll set the current tile to
+    // Empty, and recursively check if adjacent tiles should be culled
+    if any_empty || is_edge_tile {
+        board[[yi, xi]] = Tile::Empty;
+        for index in adjacent_indexes {
+            if let Tile::Floor = board[*index] {
+                cull_tiles(*index, board);
             }
         }
     }
