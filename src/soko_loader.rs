@@ -122,7 +122,7 @@ fn parse_sokoban_level(tokens: &[Token]) -> Result<World, String> {
             let (x, y) = get_board_dimensions(level_toks);
 
             // Create an initial board with default values (e.g., all `Wall`)
-            let mut board = Array2::from_elem((y, x), Tile::Empty);
+            let mut board = Array2::from_elem((y, x), Tile::Floor);
             let mut entities = Vec::new();
 
             let (mut x, mut y): (usize, usize) = (0, 0);
@@ -166,6 +166,8 @@ fn parse_sokoban_level(tokens: &[Token]) -> Result<World, String> {
                 x += 1;
             }
 
+            cull_outer_tiles(&mut board);
+
             // Create an instance of Level
             let level = World {
                 name: title.to_string(),
@@ -177,6 +179,80 @@ fn parse_sokoban_level(tokens: &[Token]) -> Result<World, String> {
         }
         _ => Err("Level must start with a title".to_string()),
     }
+}
+
+/// In the level format we cant tell what tiles are floors and what tiles are empty
+/// This function takes a board, and working from the outside of the board in culls
+/// any floor tiles with an empty neighbour.
+pub fn cull_outer_tiles(board: &mut Array2<Tile>) -> &Array2<Tile> {
+    let (height, width) = board.dim();
+    // Check first and last column for Floor tiles to cull
+    for yi in 0..height {
+        if matches!(board[[yi, 0]], Tile::Floor) {
+            cull_tiles((yi, 0), board);
+        }
+        if matches!(board[[yi, width - 1]], Tile::Floor) {
+            cull_tiles((yi, width - 1), board);
+        }
+    }
+    // Check first and last row for Floor tiles to cull
+    for xi in 0..width {
+        if matches!(board[[0, xi]], Tile::Floor) {
+            cull_tiles((0, xi), board);
+        }
+        if matches!(board[[height - 1, xi]], Tile::Floor) {
+            cull_tiles((height - 1, xi), board);
+        }
+    }
+    board
+}
+
+pub fn cull_tiles(index: (usize, usize), board: &mut Array2<Tile>) -> &Array2<Tile> {
+    // A guard so we don't cull any non-floor tiles
+    if !matches!(board[index], Tile::Floor) {
+        return board;
+    }
+    let (height, width) = board.dim();
+    let (yi, xi) = index;
+    let last_col = width - 1;
+    let last_row = height - 1;
+
+    let directions = [(1, 0), (-1, 0), (0, 1), (0, -1)];
+    let adjacent_indexes: Vec<(usize, usize)> = directions
+        .into_iter()
+        .filter_map(|(dir_y, dir_x)| {
+            let new_y = yi as i32 + dir_y;
+            let new_x = xi as i32 + dir_x;
+            // filter out directions that will cause an overflow
+            if new_y < 0
+                || new_x < 0
+                || new_y > last_row as i32
+                || new_x > last_col as i32
+            {
+                None
+            } else {
+                Some((new_y as usize, new_x as usize))
+            }
+        })
+        .collect();
+
+    // If the length of adjacent_indexes is not 4 that means we are on
+    let is_edge_tile = adjacent_indexes.len() != 4;
+    let any_empty = adjacent_indexes
+        .iter()
+        .any(|&index| matches!(board[index], Tile::Empty));
+
+    // If any of the adjacent tiles are Empty or are edge tiles we'll set the current tile to
+    // Empty, and recursively check if adjacent tiles should be culled
+    if any_empty || is_edge_tile {
+        board[[yi, xi]] = Tile::Empty;
+        for index in adjacent_indexes {
+            if matches!(board[index], Tile::Floor) {
+                cull_tiles(index, board);
+            }
+        }
+    }
+    board
 }
 
 pub fn parse_sokoban_worlds(sokoban_text: &str) -> Result<Vec<World>, String> {
