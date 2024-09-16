@@ -29,10 +29,32 @@ pub struct Save {
 #[derive(Debug)]
 pub struct Game {
     pub window: GameWindow,
+    pub worlds: Vec<World>,
+    pub world_index: usize,
     pub history: Vec<World>,
 }
 
 impl Game {
+    // TODO: Should making changes like this be a Result type?
+    // e.g. a failed result could return when you decrement from size 0
+    pub fn change_level(self: &mut Game, level_index: usize) {
+        self.world_index = level_index;
+        self.window.world = self.worlds[self.world_index].clone();
+        self.reload_world();
+    }
+
+    pub fn increment_level(self: &mut Game) {
+        if self.world_index != self.worlds.len() - 1 {
+            self.change_level(self.world_index + 1);
+        }
+    }
+
+    pub fn decrement_level(self: &mut Game) {
+        if self.world_index != 0 {
+            self.change_level(self.world_index - 1);
+        }
+    }
+
     /// Erasing your history, erases your past
     pub fn erase_history(self: &mut Game) {
         self.history.clear();
@@ -58,8 +80,10 @@ pub struct Model {
 }
 
 #[derive(Debug, PartialEq, Eq)]
+// XXX: Ambiguous name?
 pub enum RunningState {
     Menu,
+    LevelSelect,
     Game,
     Done,
 }
@@ -67,6 +91,16 @@ pub enum RunningState {
 #[derive(PartialEq)]
 pub enum MenuAction {
     StartGame,
+    Quit,
+}
+
+// #[derive(PartialEq)]
+pub enum LevelSelectAction {
+    Up,
+    Down,
+    Select,
+    // PageUp,
+    // PageDown,
     Quit,
 }
 

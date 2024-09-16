@@ -4,6 +4,7 @@ use std::io::{self, Read, Write};
 
 mod colors;
 mod copy_text;
+mod level_select;
 mod menu;
 mod render;
 mod render_tests;
@@ -64,6 +65,8 @@ fn main() -> io::Result<()> {
         game: types::Game {
             history: Vec::new(),
             window: game_window,
+            worlds: worlds.clone(),
+            world_index: current_world_i,
         },
     };
 
@@ -91,11 +94,8 @@ fn main() -> io::Result<()> {
                 // When you win a level, move to the next level!
                 // XXX: This has to happen before the while loop below. Why?
                 if let Some(types::GameAction::Win) = current_msg {
-                    current_world_i += 1;
-                    model.game.window.world = worlds[current_world_i].clone();
-                    model.game.reload_world();
-
-                    saves.saves[0].level = current_world_i;
+                    model.game.increment_level();
+                    saves.saves[0].level = model.game.world_index;
                     save_toml_file(save_file, &saves)?;
                     continue;
                 }
@@ -103,6 +103,17 @@ fn main() -> io::Result<()> {
                 // Process updates as long as they return a non-None message
                 while current_msg.is_some() {
                     current_msg = soko_game::update(&mut model, current_msg.unwrap());
+                }
+            }
+            types::RunningState::LevelSelect => {
+                terminal.draw(|f| level_select::view(&mut model, f))?;
+                // Handle events and map to a Message
+                let mut current_msg = level_select::handle_event(&model)?;
+
+                // Process updates as long as they return a non-None message
+                while current_msg.is_some() {
+                    current_msg =
+                        level_select::update(&mut model, current_msg.unwrap());
                 }
             }
         }
