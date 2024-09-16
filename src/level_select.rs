@@ -13,17 +13,8 @@ use ratatui::{
 
 pub fn view(model: &mut Model, frame: &mut Frame) {
     let mut view_text = copy_text::LEVEL_SELECT.to_string();
-    // Get list of levels by name
-    // let names = model.game.worlds.len();
-    // let worlds_len: String = model.game.worlds.clone().len().to_string();
-    // let current_level = model.game.world_index.to_string();
-    // get range of the levels to display (lets say 8) // might have to be all cool n deldy
-    // append only those hot hot babes
-    // view_text.push_str(&worlds_len);
-    // view_text.push_str(&current_level);
-    view_text.push('\n');
 
-    let selected_index = model.game.world_index;
+    let _world_index = model.game.world_index;
     // Get all of the names as a vector of strings
     let world_names: Vec<String> = model
         .game
@@ -31,7 +22,7 @@ pub fn view(model: &mut Model, frame: &mut Frame) {
         .iter()
         .enumerate() // Get the index of each world
         .map(|(index, world)| {
-            if index == selected_index {
+            if index == _world_index {
                 format!("** {} **\n", world.name) // Highlight the selected world
             } else {
                 format!("   {}\n", world.name) // Normal formatting for other worlds
@@ -39,12 +30,15 @@ pub fn view(model: &mut Model, frame: &mut Frame) {
         })
         .collect();
 
-    // Define the starting index and maximum number of names to show
-    let max_names = 10;
-    let end_index = (selected_index + max_names).min(world_names.len());
+    // TODO: @Lee I tried to do some pretty simple logic but i dont think its in a rusty way. im going to ignore this problem
+    // for now lol
+    // Print 11 rows, with selected in the middle, or otherwise if needed for shorter lists
+    let num_of_rows = std::cmp::min(11, world_names.len());
+
+    let end_index = (_world_index + num_of_rows).min(world_names.len());
 
     // Get the slice of names from the vector
-    let world_names_slice = &world_names[selected_index..end_index];
+    let world_names_slice = &world_names[_world_index..end_index];
     // Join the slice into a single string
     let world_names_joined = world_names_slice.join("");
 
