@@ -92,6 +92,7 @@ pub enum RunningState {
 pub enum MenuAction {
     StartGame,
     Quit,
+    EraseSaveData,
 }
 
 // #[derive(PartialEq)]
