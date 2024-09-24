@@ -24,8 +24,8 @@ pub fn update(model: &mut Model, msg: MenuAction) -> Option<MenuAction> {
         }
         MenuAction::EraseSaveData => {
             // When dev/user deletes a save file, put them back on world 1
+            model.game.reload_world();
             model.game.world_index = 0;
-            model.game.refresh_window();
             delete_save_file();
         }
     };
