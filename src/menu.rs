@@ -1,7 +1,7 @@
 use crate::copy_text;
 use crate::types::{MenuAction, Model, RunningState};
-use std::io;
 use std::time::Duration;
+use std::{fs, io};
 
 use ratatui::{
     crossterm::event::{self, Event, KeyCode},
@@ -22,8 +22,21 @@ pub fn update(model: &mut Model, msg: MenuAction) -> Option<MenuAction> {
             // You can handle cleanup and exit here
             model.running_state = RunningState::Done;
         }
+        MenuAction::EraseSaveData => {
+            // When dev/user deletes a save file, put them back on world 1
+            model.game.reload_world();
+            model.game.world_index = 0;
+            delete_save_file();
+        }
     };
     None
+}
+
+fn delete_save_file() {
+    let save_file = "saves.toml";
+    if let Err(e) = fs::remove_file(save_file) {
+        println!("{}", e)
+    }
 }
 
 /// Convert Event to Message
@@ -45,6 +58,7 @@ pub fn handle_key(key: event::KeyEvent) -> Option<MenuAction> {
     match key.code {
         KeyCode::Enter | KeyCode::Char(' ') => Some(MenuAction::StartGame),
         KeyCode::Esc => Some(MenuAction::Quit),
+        KeyCode::Delete => Some(MenuAction::EraseSaveData),
         _ => None,
     }
 }
