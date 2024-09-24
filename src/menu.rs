@@ -34,9 +34,8 @@ pub fn update(model: &mut Model, msg: MenuAction) -> Option<MenuAction> {
 
 fn delete_save_file() {
     let save_file = "saves.toml";
-    match fs::remove_file(save_file) {
-        Ok(_) => {}
-        Err(e) => println!("{}", e),
+    if let Err(e) = fs::remove_file(save_file) {
+        println!("{}", e)
     }
 }
 
