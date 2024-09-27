@@ -33,7 +33,7 @@ fn save_toml_file<T: Serialize>(filename: &str, toml: &T) -> Result<(), io::Erro
 
 fn main() -> io::Result<()> {
     tui::install_panic_hook();
-    let save_file = "saves.toml";
+    let save_filename = "saves.toml";
     let mut terminal = tui::init_terminal()?;
 
     let ban_filename = "./resources/levels/micro2.ban";
@@ -43,12 +43,12 @@ fn main() -> io::Result<()> {
         .map(|contents| soko_loader::parse_sokoban_worlds(&contents).unwrap())
         .unwrap();
 
-    let saves: Option<types::SaveFile> = read_file(save_file)
+    let saves: Option<types::SaveFile> = read_file(save_filename)
         .map(|contents| toml::from_str(&contents).unwrap())
         .ok();
 
     let mut current_world_i = 0;
-    let mut saves = match saves {
+    let saves = match saves {
         Some(saves) => {
             current_world_i = saves.saves[0].level;
             saves
@@ -68,6 +68,7 @@ fn main() -> io::Result<()> {
             worlds: worlds.clone(),
             world_index: current_world_i,
         },
+        save_file: saves,
     };
 
     loop {
@@ -94,9 +95,14 @@ fn main() -> io::Result<()> {
                 // When you win a level, move to the next level!
                 // XXX: This has to happen before the while loop below. Why?
                 if let Some(types::GameAction::Win) = current_msg {
+                    // When we win a game we then (try to) go to the next level in the list!
                     model.game.increment_level();
-                    saves.saves[0].level = model.game.world_index;
-                    save_toml_file(save_file, &saves)?;
+
+                    if model.game.world_index > model.save_file.saves[0].level {
+                        model.save_file.saves[0].level = model.game.world_index;
+                        // println!("DDDDDDDDDDDDDDDDDDDD\nDFasd\nasdfasdfd")
+                    }
+                    save_toml_file(save_filename, &model.save_file)?;
                     continue;
                 }
 
