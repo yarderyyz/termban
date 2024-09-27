@@ -71,12 +71,6 @@ impl Game {
         self.erase_history();
         self.refresh_window();
     }
-
-    // When a save is deleted, we reset to make the world and window-world point to 0
-    pub fn reset_windowed_world_to_zero(self: &mut Game) {
-        self.world_index = 0;
-        self.window.world = self.worlds[0].clone();
-    }
 }
 
 #[derive(Debug)]
