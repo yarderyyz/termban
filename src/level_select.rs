@@ -61,7 +61,9 @@ pub fn update(model: &mut Model, msg: LevelSelectAction) -> Option<LevelSelectAc
         }
         LevelSelectAction::Down => {
             // Move cursor down if you have unlocked that level already
-            if model.save_file.saves[0].level > model.game.world_index {
+            if model.save_file.saves[0].level > model.game.world_index
+                || cfg!(feature = "develop")
+            {
                 model.game.increment_level();
             }
         }

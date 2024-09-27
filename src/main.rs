@@ -98,9 +98,9 @@ fn main() -> io::Result<()> {
                     // When we win a game we then (try to) go to the next level in the list!
                     model.game.increment_level();
 
+                    // Update latest level unlocked if you just did that, anyway
                     if model.game.world_index > model.save_file.saves[0].level {
                         model.save_file.saves[0].level = model.game.world_index;
-                        // println!("DDDDDDDDDDDDDDDDDDDD\nDFasd\nasdfasdfd")
                     }
                     save_toml_file(save_filename, &model.save_file)?;
                     continue;
