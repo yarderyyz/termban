@@ -1,6 +1,8 @@
+use fundsp::{create_c_major, create_simple_fm, create_sine_440, run_output};
 use serde::Serialize;
 use std::fs::File;
 use std::io::{self, Read, Write};
+use std::time::Duration;
 
 mod colors;
 mod copy_text;
@@ -33,6 +35,17 @@ fn save_toml_file<T: Serialize>(filename: &str, toml: &T) -> Result<(), io::Erro
 }
 
 fn main() -> io::Result<()> {
+    let audio_graph = create_simple_fm();
+    let audio_graph2 = create_c_major();
+    let audio_graph3 = create_sine_440();
+
+    // This function starts the thread that creates the audio and sends
+    // it to CPAL so that we can hear it.
+    run_output(audio_graph, Some(Duration::from_secs(3)));
+    run_output(audio_graph2, Some(Duration::from_secs(2)));
+    run_output(audio_graph3, Some(Duration::from_secs(1)));
+    // The audio is being played on a thread, and will run stop at some duration
+
     tui::install_panic_hook();
     let mut terminal = tui::init_terminal()?;
 
