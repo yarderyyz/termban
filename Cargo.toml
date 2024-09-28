@@ -11,7 +11,7 @@ palette = "0.7.6"
 serde = { version = "1.0", features = ["derive"] }
 toml = "0.8.19"
 cpal = "0.15.3" # Add cpal for audio handling
-
+fundsp = "0.16.0" # DSP Middleware solution
 
 [dev-dependencies.cargo-husky]
 version = "1"
