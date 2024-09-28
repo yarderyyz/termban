@@ -43,6 +43,7 @@ fn main() -> io::Result<()> {
             std::process::exit(1); // or handle the error appropriately
         });
 
+    let save_filename = "saves.toml";
     let saves: Option<types::SaveFile> = read_file(save_filename)
         .map(|contents| toml::from_str(&contents).unwrap())
         .ok();
