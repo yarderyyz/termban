@@ -1,9 +1,12 @@
+use fundsp::{create_c_major, create_simple_fm, create_sine_440, run_output};
 use serde::Serialize;
 use std::fs::File;
 use std::io::{self, Read, Write};
+use std::time::Duration;
 
 mod colors;
 mod copy_text;
+mod fundsp;
 mod level_select;
 mod menu;
 mod render;
@@ -32,17 +35,28 @@ fn save_toml_file<T: Serialize>(filename: &str, toml: &T) -> Result<(), io::Erro
 }
 
 fn main() -> io::Result<()> {
+    let audio_graph = create_simple_fm();
+    let audio_graph2 = create_c_major();
+    let audio_graph3 = create_sine_440();
+
+    // This function starts the thread that creates the audio and sends
+    // it to CPAL so that we can hear it.
+    run_output(audio_graph, Some(Duration::from_secs(3)));
+    run_output(audio_graph2, Some(Duration::from_secs(2)));
+    run_output(audio_graph3, Some(Duration::from_secs(1)));
+    // The audio is being played on a thread, and will run stop at some duration
+
     tui::install_panic_hook();
-    let save_filename = "saves.toml";
     let mut terminal = tui::init_terminal()?;
 
-    let ban_filename = "./resources/levels/micro2.ban";
+    let ban_world_as_text = include_str!("resources/levels/micro2.ban");
+    let worlds =
+        soko_loader::parse_sokoban_worlds(ban_world_as_text).unwrap_or_else(|err| {
+            eprintln!("Failed to parse Sokoban worlds: {}", err);
+            std::process::exit(1); // or handle the error appropriately
+        });
 
-    // TODO: actually handle errors here
-    let worlds = read_file(ban_filename)
-        .map(|contents| soko_loader::parse_sokoban_worlds(&contents).unwrap())
-        .unwrap();
-
+    let save_filename = "saves.toml";
     let saves: Option<types::SaveFile> = read_file(save_filename)
         .map(|contents| toml::from_str(&contents).unwrap())
         .ok();
