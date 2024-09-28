@@ -4,6 +4,7 @@ use std::io::{self, Read, Write};
 
 mod colors;
 mod copy_text;
+mod fundsp;
 mod level_select;
 mod menu;
 mod render;
