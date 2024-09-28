@@ -14,7 +14,7 @@ use ratatui::{
 pub fn view(model: &mut Model, frame: &mut Frame) {
     let mut view_text = copy_text::LEVEL_SELECT.to_string();
 
-    let _world_index = model.game.world_index;
+    let selected_world_index = model.game.world_index;
     // Get all of the names as a vector of strings
     let world_names: Vec<String> = model
         .game
@@ -22,10 +22,15 @@ pub fn view(model: &mut Model, frame: &mut Frame) {
         .iter()
         .enumerate() // Get the index of each world
         .map(|(index, world)| {
-            if index == _world_index {
-                format!("** {} **\n", world.name) // Highlight the selected world
+            let lock_str = if index > model.save_file.saves[0].level {
+                "🔒 "
             } else {
-                format!("   {}\n", world.name) // Normal formatting for other worlds
+                "   "
+            };
+            if index == selected_world_index {
+                format!("** {}{}    **\n", lock_str, world.name) // Highlight the selected world
+            } else {
+                format!("   {}{}\n", lock_str, world.name) // Normal formatting for other worlds
             }
         })
         .collect();
@@ -35,10 +40,10 @@ pub fn view(model: &mut Model, frame: &mut Frame) {
     // Print 11 rows, with selected in the middle, or otherwise if needed for shorter lists
     let num_of_rows = std::cmp::min(11, world_names.len());
 
-    let end_index = (_world_index + num_of_rows).min(world_names.len());
+    let end_index = (selected_world_index + num_of_rows).min(world_names.len());
 
     // Get the slice of names from the vector
-    let world_names_slice = &world_names[_world_index..end_index];
+    let world_names_slice = &world_names[selected_world_index..end_index];
     // Join the slice into a single string
     let world_names_joined = world_names_slice.join("");
 
@@ -60,7 +65,12 @@ pub fn update(model: &mut Model, msg: LevelSelectAction) -> Option<LevelSelectAc
             model.game.decrement_level();
         }
         LevelSelectAction::Down => {
-            model.game.increment_level();
+            // Move cursor down if you have unlocked that level already
+            if model.save_file.saves[0].level > model.game.world_index
+                || cfg!(feature = "develop")
+            {
+                model.game.increment_level();
+            }
         }
     };
     None

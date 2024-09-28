@@ -1,5 +1,5 @@
 use crate::copy_text;
-use crate::types::{MenuAction, Model, RunningState};
+use crate::types::{MenuAction, Model, RunningState, SaveFile};
 use std::time::Duration;
 use std::{fs, io};
 
@@ -25,6 +25,7 @@ pub fn update(model: &mut Model, msg: MenuAction) -> Option<MenuAction> {
         MenuAction::EraseSaveData => {
             // When dev/user deletes a save file, put them back on world 1
             delete_save_file();
+            model.save_file = SaveFile::new();
             model.game.change_level(0);
         }
     };

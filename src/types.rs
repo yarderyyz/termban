@@ -35,8 +35,6 @@ pub struct Game {
 }
 
 impl Game {
-    // TODO: Should making changes like this be a Result type?
-    // e.g. a failed result could return when you decrement from size 0
     pub fn change_level(self: &mut Game, level_index: usize) {
         self.world_index = level_index;
         self.window.world = self.worlds[self.world_index].clone();
@@ -77,6 +75,7 @@ impl Game {
 pub struct Model {
     pub running_state: RunningState,
     pub game: Game,
+    pub save_file: SaveFile,
 }
 
 #[derive(Debug, PartialEq, Eq)]
