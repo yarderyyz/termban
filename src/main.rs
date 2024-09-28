@@ -33,15 +33,14 @@ fn save_toml_file<T: Serialize>(filename: &str, toml: &T) -> Result<(), io::Erro
 
 fn main() -> io::Result<()> {
     tui::install_panic_hook();
-    let save_filename = "saves.toml";
     let mut terminal = tui::init_terminal()?;
 
-    let ban_filename = "./resources/levels/micro2.ban";
-
-    // TODO: actually handle errors here
-    let worlds = read_file(ban_filename)
-        .map(|contents| soko_loader::parse_sokoban_worlds(&contents).unwrap())
-        .unwrap();
+    let ban_world_as_text = include_str!("resources/levels/micro2.ban");
+    let worlds =
+        soko_loader::parse_sokoban_worlds(ban_world_as_text).unwrap_or_else(|err| {
+            eprintln!("Failed to parse Sokoban worlds: {}", err);
+            std::process::exit(1); // or handle the error appropriately
+        });
 
     let saves: Option<types::SaveFile> = read_file(save_filename)
         .map(|contents| toml::from_str(&contents).unwrap())
