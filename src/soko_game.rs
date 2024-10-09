@@ -12,7 +12,7 @@ use ratatui::{
 };
 
 pub fn view(model: &mut Model, frame: &mut Frame) {
-    let game_window = &mut model.game.window;
+    let game_window = &mut model.soko_game;
 
     let main_area = frame.area();
 
@@ -20,7 +20,7 @@ pub fn view(model: &mut Model, frame: &mut Frame) {
         Layout::horizontal([Constraint::Percentage(50), Constraint::Percentage(50)])
             .areas(main_area);
 
-    let title = &game_window.world.name;
+    let title = &game_window.current_state.name;
     let outer_left_block = Block::bordered().title(title.clone());
     let inner_left = outer_left_block.inner(left_area);
 
@@ -71,26 +71,26 @@ pub fn handle_key(key: event::KeyEvent) -> Option<GameAction> {
 }
 
 pub fn update(model: &mut Model, msg: GameAction) -> Option<GameAction> {
-    let game = &mut model.game;
+    let game = &mut model.soko_game;
     match msg {
         GameAction::Quit => model.running_state = RunningState::LevelSelect,
         GameAction::Move(direction) => {
-            if let Some(new_level) = handle_move(&game.window.world, direction) {
-                game.history.push(game.window.world.clone());
-                game.window.world = new_level;
+            if let Some(new_state) = handle_move(&game.current_state, direction) {
+                game.history.push(game.current_state.clone());
+                game.current_state = new_state;
             }
         }
         GameAction::Undo => {
-            if let Some(prev_level) = game.history.pop() {
-                game.window.world = prev_level;
+            if let Some(prev_state) = game.history.pop() {
+                game.current_state = prev_state;
             }
         }
         GameAction::Reset => {
-            game.refresh_window();
+            model.refresh_window();
         }
-        GameAction::ZoomClose => game.window.zoom = Zoom::Close,
-        GameAction::ZoomMiddle => game.window.zoom = Zoom::Middle,
-        GameAction::ZoomFar => game.window.zoom = Zoom::Far,
+        GameAction::ZoomClose => game.zoom = Zoom::Close,
+        GameAction::ZoomMiddle => game.zoom = Zoom::Middle,
+        GameAction::ZoomFar => game.zoom = Zoom::Far,
         GameAction::None => {}
         GameAction::Win => {}
     };
@@ -98,14 +98,14 @@ pub fn update(model: &mut Model, msg: GameAction) -> Option<GameAction> {
 }
 
 pub fn handle_event(model: &mut Model) -> io::Result<Option<GameAction>> {
-    let window = &mut model.game.window;
-    window.debug = Vec::new();
+    let soko_game = &mut model.soko_game;
+    soko_game.debug = Vec::new();
 
-    window.debug.push(format!(
+    soko_game.debug.push(format!(
         "\n                Steps: {:?}
         Best Solution: X
         \ntbd... ",
-        &model.game.history.len()
+        &soko_game.history.len()
     ));
 
     if event::poll(Duration::from_millis(50))? {
@@ -117,7 +117,7 @@ pub fn handle_event(model: &mut Model) -> io::Result<Option<GameAction>> {
     }
 
     // Prevent handling key events, coincidentally, because it's solved!
-    if window.world.is_sokoban_solved() {
+    if soko_game.current_state.is_sokoban_solved() {
         return Ok(Some(GameAction::Win));
     }
     Ok(None)

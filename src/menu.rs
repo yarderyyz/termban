@@ -26,7 +26,7 @@ pub fn update(model: &mut Model, msg: MenuAction) -> Option<MenuAction> {
             // When dev/user deletes a save file, put them back on world 1
             delete_save_file();
             model.save_file = SaveFile::new();
-            model.game.change_level(0);
+            model.change_level(0);
         }
     };
     None

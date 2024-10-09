@@ -27,55 +27,49 @@ pub struct Save {
 }
 
 #[derive(Debug)]
-pub struct Game {
-    pub window: GameWindow,
+pub struct Model {
+    pub running_state: RunningState,
+    pub soko_game: SokoModel,
     pub worlds: Vec<World>,
     pub world_index: usize,
-    pub history: Vec<World>,
+    pub save_file: SaveFile,
 }
 
-impl Game {
-    pub fn change_level(self: &mut Game, level_index: usize) {
+impl Model {
+    pub fn change_level(self: &mut Model, level_index: usize) {
         self.world_index = level_index;
-        self.window.world = self.worlds[self.world_index].clone();
+        self.soko_game.current_state = self.worlds[self.world_index].clone();
         self.reload_world();
     }
 
-    pub fn increment_level(self: &mut Game) {
+    pub fn increment_level(self: &mut Model) {
         if self.world_index != self.worlds.len() - 1 {
             self.change_level(self.world_index + 1);
         }
     }
 
-    pub fn decrement_level(self: &mut Game) {
+    pub fn decrement_level(self: &mut Model) {
         if self.world_index != 0 {
             self.change_level(self.world_index - 1);
         }
     }
 
     /// Erasing your history, erases your past
-    pub fn erase_history(self: &mut Game) {
-        self.history.clear();
+    pub fn erase_history(self: &mut Model) {
+        self.soko_game.history.clear();
     }
     /// Let's start over from the beginning.
-    pub fn refresh_window(self: &mut Game) {
-        if let Some(prev_world_state) = self.history.first() {
-            self.window.world = prev_world_state.clone();
+    pub fn refresh_window(self: &mut Model) {
+        if let Some(prev_world_state) = self.soko_game.history.first() {
+            self.soko_game.current_state = prev_world_state.clone();
         }
         self.erase_history();
     }
     /// Loading a new area erases your history and refreshes the window
-    pub fn reload_world(self: &mut Game) {
+    pub fn reload_world(self: &mut Model) {
         self.erase_history();
         self.refresh_window();
     }
-}
-
-#[derive(Debug)]
-pub struct Model {
-    pub running_state: RunningState,
-    pub game: Game,
-    pub save_file: SaveFile,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -224,9 +218,10 @@ impl Tile {
 }
 
 #[derive(Debug, Clone)]
-pub struct GameWindow {
-    pub world: World,
+pub struct SokoModel {
+    pub current_state: World,
     pub zoom: Zoom,
+    pub history: Vec<World>,
     pub debug: Vec<String>,
 }
 

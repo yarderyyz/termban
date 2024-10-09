@@ -1,7 +1,7 @@
 use crate::sprites::get_player_sprite_4;
 use crate::types::{
-    Coordinate, Entity, GameWindow, GlyphCell, GlyphCells, RenderGraph, RenderItem,
-    RenderNode, World, Zoom,
+    Coordinate, Entity, GlyphCell, GlyphCells, RenderGraph, RenderItem, RenderNode,
+    SokoModel, World, Zoom,
 };
 
 use ndarray::Array2;
@@ -277,10 +277,10 @@ where
 /// let game_window = GameWindow::new(world);
 /// game_window.render(Rect::new(0, 0, 80, 25), &mut buffer);
 /// ```
-impl Widget for GameWindow {
+impl Widget for SokoModel {
     #[allow(clippy::cast_precision_loss)]
     fn render(self, area: Rect, buf: &mut Buffer) {
-        let graph = generate_render_graph(&self.world);
+        let graph = generate_render_graph(&self.current_state);
         let glyph_buffer = match self.zoom {
             Zoom::Close => glypherize_graph(graph, area, render_sprites),
             Zoom::Middle => {
