@@ -256,18 +256,18 @@ impl Default for GlyphCell {
 pub type GlyphCells = Array2<GlyphCell>;
 
 #[derive(Debug, Clone)]
-pub enum RenderItem {
-    Board(Board),
-    Entity(Entity),
+pub enum RenderItem<'a> {
+    Board(&'a Board),
+    Entity(&'a Entity),
 }
 
 #[derive(Debug, Clone)]
-pub struct RenderNode {
-    pub item: RenderItem,
-    pub children: Option<Vec<RenderNode>>,
+pub struct RenderNode<'a> {
+    pub item: RenderItem<'a>,
+    pub children: Option<Vec<RenderNode<'a>>>,
 }
 
 #[derive(Debug, Clone)]
-pub struct RenderGraph {
-    pub root: RenderNode,
+pub struct RenderGraph<'a> {
+    pub root: RenderNode<'a>,
 }

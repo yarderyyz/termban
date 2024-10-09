@@ -158,14 +158,14 @@ fn generate_render_graph(world: &World) -> RenderGraph {
         .entities
         .iter()
         .map(|ent| RenderNode {
-            item: RenderItem::Entity(ent.clone()),
+            item: RenderItem::Entity(ent),
             children: None,
         })
         .collect();
 
     RenderGraph {
         root: RenderNode {
-            item: RenderItem::Board(world.board.clone()),
+            item: RenderItem::Board(&world.board),
             children: Some(children),
         },
     }
