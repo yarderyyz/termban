@@ -12,7 +12,7 @@ use ratatui::{
 };
 
 pub fn view(model: &mut Model, frame: &mut Frame) {
-    let game_window = &mut model.game.window;
+    let game_window = &mut model.soko_game;
 
     let main_area = frame.area();
 
@@ -20,7 +20,7 @@ pub fn view(model: &mut Model, frame: &mut Frame) {
         Layout::horizontal([Constraint::Percentage(50), Constraint::Percentage(50)])
             .areas(main_area);
 
-    let title = &game_window.world.name;
+    let title = &game_window.current_state.name;
     let outer_left_block = Block::bordered().title(title.clone());
     let inner_left = outer_left_block.inner(left_area);
 
@@ -71,41 +71,48 @@ pub fn handle_key(key: event::KeyEvent) -> Option<GameAction> {
 }
 
 pub fn update(model: &mut Model, msg: GameAction) -> Option<GameAction> {
-    let game = &mut model.game;
+    let game = &mut model.soko_game;
     match msg {
         GameAction::Quit => model.running_state = RunningState::LevelSelect,
         GameAction::Move(direction) => {
-            if let Some(new_level) = handle_move(&game.window.world, direction) {
-                game.history.push(game.window.world.clone());
-                game.window.world = new_level;
+            if let Some(new_state) = handle_move(&game.current_state, direction) {
+                game.history.push(game.current_state.clone());
+                game.current_state = new_state;
             }
         }
         GameAction::Undo => {
-            if let Some(prev_level) = game.history.pop() {
-                game.window.world = prev_level;
+            if let Some(prev_state) = game.history.pop() {
+                game.current_state = prev_state;
             }
         }
         GameAction::Reset => {
-            game.refresh_window();
+            model.refresh_window();
         }
-        GameAction::ZoomClose => game.window.zoom = Zoom::Close,
-        GameAction::ZoomMiddle => game.window.zoom = Zoom::Middle,
-        GameAction::ZoomFar => game.window.zoom = Zoom::Far,
+        GameAction::ZoomClose => game.zoom = Zoom::Close,
+        GameAction::ZoomMiddle => game.zoom = Zoom::Middle,
+        GameAction::ZoomFar => game.zoom = Zoom::Far,
         GameAction::None => {}
-        GameAction::Win => {}
+        GameAction::Win => {
+            model.increment_level();
+
+            // Update latest level unlocked if you just did that, anyway
+            if model.world_index > model.save_file.saves[0].level {
+                model.save_file.saves[0].level = model.world_index;
+            }
+        }
     };
     None
 }
 
 pub fn handle_event(model: &mut Model) -> io::Result<Option<GameAction>> {
-    let window = &mut model.game.window;
-    window.debug = Vec::new();
+    let soko_game = &mut model.soko_game;
+    soko_game.debug = Vec::new();
 
-    window.debug.push(format!(
+    soko_game.debug.push(format!(
         "\n                Steps: {:?}
         Best Solution: X
         \ntbd... ",
-        &model.game.history.len()
+        &soko_game.history.len()
     ));
 
     if event::poll(Duration::from_millis(50))? {
@@ -117,7 +124,7 @@ pub fn handle_event(model: &mut Model) -> io::Result<Option<GameAction>> {
     }
 
     // Prevent handling key events, coincidentally, because it's solved!
-    if window.world.is_sokoban_solved() {
+    if soko_game.current_state.is_sokoban_solved() {
         return Ok(Some(GameAction::Win));
     }
     Ok(None)
@@ -131,8 +138,8 @@ fn handle_move(prev_level: &World, direction: Direction) -> Option<World> {
     // if the player is trying to move into a wall we'll do nothing otherwise we'll
     // set the move
     for (index, entity) in level.entities.iter().enumerate() {
-        if let Entity::Player(player) = entity {
-            let new_position = get_new_position(player.position.clone(), &direction);
+        if let Entity::Player { position } = entity {
+            let new_position = get_new_position(position, &direction);
 
             match level.board[[new_position.y, new_position.x]] {
                 Tile::Wall => player_move = None,
@@ -145,12 +152,11 @@ fn handle_move(prev_level: &World, direction: Direction) -> Option<World> {
     let mut soko_box_move = None;
     if let Some((_, player_position)) = player_move.clone() {
         for (index, entity) in level.entities.iter().enumerate() {
-            if let Entity::SokoBox(soko_box) = entity {
+            if let Entity::SokoBox { position } = entity {
                 // if there is a soko_box where the player wants to move see if we can
                 // push it.
-                if soko_box.position == player_position.clone() {
-                    let new_position =
-                        get_new_position(soko_box.position.clone(), &direction);
+                if *position == player_position {
+                    let new_position = get_new_position(position, &direction);
 
                     if level.is_tile_occupied(&new_position) {
                         // if the tile we are trying to move too is occupied both moves are
@@ -168,22 +174,22 @@ fn handle_move(prev_level: &World, direction: Direction) -> Option<World> {
 
     // resolve the movement
     if let Some((index, new_position)) = player_move {
-        if let Entity::Player(ref mut player) = &mut level.entities[index] {
-            player.position = new_position.clone();
+        if let Entity::Player { position } = &mut level.entities[index] {
+            *position = new_position.clone();
         }
     } else {
         return None;
     }
     if let Some((index, new_position)) = soko_box_move {
-        if let Entity::SokoBox(ref mut soko_box) = &mut level.entities[index] {
-            soko_box.position = new_position.clone();
+        if let Entity::SokoBox { position } = &mut level.entities[index] {
+            *position = new_position.clone();
         }
     }
 
     Some(level)
 }
 
-fn get_new_position(position: Coordinate, direction: &Direction) -> Coordinate {
+fn get_new_position(position: &Coordinate, direction: &Direction) -> Coordinate {
     match direction {
         Direction::Up => Coordinate {
             x: position.x,

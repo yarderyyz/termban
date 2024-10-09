@@ -1,7 +1,7 @@
 use crate::sprites::get_player_sprite_4;
 use crate::types::{
-    Coordinate, Entity, GameWindow, GlyphCell, GlyphCells, RenderGraph, RenderItem,
-    RenderNode, World, Zoom,
+    Coordinate, Entity, GlyphCell, GlyphCells, RenderGraph, RenderItem, RenderNode,
+    SokoModel, World, Zoom,
 };
 
 use ndarray::Array2;
@@ -86,7 +86,7 @@ fn render_sprites(item: &RenderItem, glyph_buffer: GlyphCells) -> GlyphCells {
         RenderItem::Entity(entity) => {
             let pos = entity.get_position();
             match entity {
-                Entity::Player(_) => {
+                Entity::Player { .. } => {
                     let mut glyph_buffer = glyph_buffer.clone();
                     let player_sprite = get_player_sprite_4();
                     for (yi, row) in player_sprite.chars.rows().into_iter().enumerate()
@@ -158,14 +158,14 @@ fn generate_render_graph(world: &World) -> RenderGraph {
         .entities
         .iter()
         .map(|ent| RenderNode {
-            item: RenderItem::Entity(ent.clone()),
+            item: RenderItem::Entity(ent),
             children: None,
         })
         .collect();
 
     RenderGraph {
         root: RenderNode {
-            item: RenderItem::Board(world.board.clone()),
+            item: RenderItem::Board(&world.board),
             children: Some(children),
         },
     }
@@ -277,10 +277,10 @@ where
 /// let game_window = GameWindow::new(world);
 /// game_window.render(Rect::new(0, 0, 80, 25), &mut buffer);
 /// ```
-impl Widget for GameWindow {
+impl Widget for SokoModel {
     #[allow(clippy::cast_precision_loss)]
     fn render(self, area: Rect, buf: &mut Buffer) {
-        let graph = generate_render_graph(&self.world);
+        let graph = generate_render_graph(&self.current_state);
         let glyph_buffer = match self.zoom {
             Zoom::Close => glypherize_graph(graph, area, render_sprites),
             Zoom::Middle => {

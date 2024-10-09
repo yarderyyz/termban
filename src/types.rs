@@ -27,55 +27,44 @@ pub struct Save {
 }
 
 #[derive(Debug)]
-pub struct Game {
-    pub window: GameWindow,
+pub struct Model {
+    pub running_state: RunningState,
+    pub soko_game: SokoModel,
     pub worlds: Vec<World>,
     pub world_index: usize,
-    pub history: Vec<World>,
+    pub save_file: SaveFile,
 }
 
-impl Game {
-    pub fn change_level(self: &mut Game, level_index: usize) {
+impl Model {
+    pub fn change_level(self: &mut Model, level_index: usize) {
         self.world_index = level_index;
-        self.window.world = self.worlds[self.world_index].clone();
-        self.reload_world();
+        let world = self.worlds[self.world_index].clone();
+        self.soko_game = SokoModel::from(world)
     }
 
-    pub fn increment_level(self: &mut Game) {
+    pub fn increment_level(self: &mut Model) {
         if self.world_index != self.worlds.len() - 1 {
             self.change_level(self.world_index + 1);
         }
     }
 
-    pub fn decrement_level(self: &mut Game) {
+    pub fn decrement_level(self: &mut Model) {
         if self.world_index != 0 {
             self.change_level(self.world_index - 1);
         }
     }
 
     /// Erasing your history, erases your past
-    pub fn erase_history(self: &mut Game) {
-        self.history.clear();
+    pub fn erase_history(self: &mut Model) {
+        self.soko_game.history.clear();
     }
     /// Let's start over from the beginning.
-    pub fn refresh_window(self: &mut Game) {
-        if let Some(prev_world_state) = self.history.first() {
-            self.window.world = prev_world_state.clone();
+    pub fn refresh_window(self: &mut Model) {
+        if let Some(prev_world_state) = self.soko_game.history.first() {
+            self.soko_game.current_state = prev_world_state.clone();
         }
         self.erase_history();
     }
-    /// Loading a new area erases your history and refreshes the window
-    pub fn reload_world(self: &mut Game) {
-        self.erase_history();
-        self.refresh_window();
-    }
-}
-
-#[derive(Debug)]
-pub struct Model {
-    pub running_state: RunningState,
-    pub game: Game,
-    pub save_file: SaveFile,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -104,7 +93,7 @@ pub enum LevelSelectAction {
     Quit,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Direction {
     Left,
     Right,
@@ -112,7 +101,7 @@ pub enum Direction {
     Down,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum GameAction {
     None,
     Quit,
@@ -152,32 +141,22 @@ impl Coordinate {
 }
 
 #[derive(Debug, Clone)]
-pub struct Player {
-    pub position: Coordinate,
-}
-
-#[derive(Debug, Clone)]
-pub struct SokoBox {
-    pub position: Coordinate,
-}
-
-#[derive(Debug, Clone)]
 pub enum Entity {
-    Player(Player),
-    SokoBox(SokoBox),
+    Player { position: Coordinate },
+    SokoBox { position: Coordinate },
 }
 
 impl Entity {
     pub fn get_position(&self) -> Coordinate {
         match self {
-            Entity::Player(player) => player.position.clone(),
-            Entity::SokoBox(soko_box) => soko_box.position.clone(),
+            Entity::Player { position } => position.clone(),
+            Entity::SokoBox { position } => position.clone(),
         }
     }
     pub fn color(&self) -> Color {
         match self {
-            Entity::Player(_) => get_color(TolColor::PurRed),
-            Entity::SokoBox(_) => get_color(TolColor::BriBlue),
+            Entity::Player { .. } => get_color(TolColor::PurRed),
+            Entity::SokoBox { .. } => get_color(TolColor::BriBlue),
         }
     }
 }
@@ -198,8 +177,8 @@ impl World {
         match self.board[[coord.y, coord.x]] {
             Tile::Wall => true,
             _ => {
-                for ent in self.entities.iter() {
-                    if ent.get_position() == *coord {
+                for entity in self.entities.iter() {
+                    if entity.get_position() == *coord {
                         return true;
                     }
                 }
@@ -210,17 +189,15 @@ impl World {
 
     // If every soko_box entity share a coordinate space with a goal tile, that means you win!
     pub fn is_sokoban_solved(&self) -> bool {
-        self.entities
-            .iter()
-            .filter(|ent| matches!(ent, Entity::SokoBox(_)))
-            .all(|ent| {
-                if let Entity::SokoBox(soko_box) = ent {
-                    let tile = &self.board[[soko_box.position.y, soko_box.position.x]];
-                    matches!(tile, Tile::Goal)
-                } else {
-                    false // This line should never be reached due to the filter
-                }
-            })
+        self.entities.iter().all(|entity| {
+            if let Entity::SokoBox { position } = entity {
+                let tile = &self.board[[position.y, position.x]];
+                matches!(tile, Tile::Goal)
+            } else {
+                // Other entities don't count towards the win condition so return true
+                true
+            }
+        })
     }
 }
 
@@ -236,10 +213,22 @@ impl Tile {
 }
 
 #[derive(Debug, Clone)]
-pub struct GameWindow {
-    pub world: World,
+pub struct SokoModel {
+    pub current_state: World,
     pub zoom: Zoom,
+    pub history: Vec<World>,
     pub debug: Vec<String>,
+}
+
+impl SokoModel {
+    pub fn from(world: World) -> Self {
+        Self {
+            current_state: world,
+            zoom: Zoom::Middle,
+            history: Vec::new(),
+            debug: Vec::new(),
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -268,18 +257,18 @@ impl Default for GlyphCell {
 pub type GlyphCells = Array2<GlyphCell>;
 
 #[derive(Debug, Clone)]
-pub enum RenderItem {
-    Board(Board),
-    Entity(Entity),
+pub enum RenderItem<'a> {
+    Board(&'a Board),
+    Entity(&'a Entity),
 }
 
 #[derive(Debug, Clone)]
-pub struct RenderNode {
-    pub item: RenderItem,
-    pub children: Option<Vec<RenderNode>>,
+pub struct RenderNode<'a> {
+    pub item: RenderItem<'a>,
+    pub children: Option<Vec<RenderNode<'a>>>,
 }
 
 #[derive(Debug, Clone)]
-pub struct RenderGraph {
-    pub root: RenderNode,
+pub struct RenderGraph<'a> {
+    pub root: RenderNode<'a>,
 }

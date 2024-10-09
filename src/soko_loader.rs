@@ -19,7 +19,7 @@
  * a newline and starting with a level identifier.
  */
 
-use crate::types::{Coordinate, Entity, Player, SokoBox, Tile, World};
+use crate::types::{Coordinate, Entity, Tile, World};
 use ndarray::Array2;
 
 #[derive(Debug, Clone)]
@@ -132,29 +132,29 @@ fn parse_sokoban_level(tokens: &[Token]) -> Result<World, String> {
                         board[[y, x]] = Tile::Wall;
                     }
                     Token::Player => {
-                        entities.push(Entity::Player(Player {
+                        entities.push(Entity::Player {
                             position: Coordinate { x, y },
-                        }));
+                        });
                     }
                     Token::Goal => {
                         board[[y, x]] = Tile::Goal;
                     }
                     Token::SokoBox => {
-                        entities.push(Entity::SokoBox(SokoBox {
+                        entities.push(Entity::SokoBox {
                             position: Coordinate { x, y },
-                        }));
+                        });
                     }
                     Token::SokoBoxAndGoal => {
                         board[[y, x]] = Tile::Goal;
-                        entities.push(Entity::SokoBox(SokoBox {
+                        entities.push(Entity::SokoBox {
                             position: Coordinate { x, y },
-                        }));
+                        });
                     }
                     Token::PlayerAndGoal => {
                         board[[y, x]] = Tile::Goal;
-                        entities.push(Entity::Player(Player {
+                        entities.push(Entity::Player {
                             position: Coordinate { x, y },
-                        }));
+                        });
                     }
                     Token::NewLine => {
                         y += 1;
