@@ -98,7 +98,7 @@ pub enum LevelSelectAction {
     Quit,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Direction {
     Left,
     Right,
@@ -106,7 +106,7 @@ pub enum Direction {
     Down,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum GameAction {
     None,
     Quit,

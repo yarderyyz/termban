@@ -92,7 +92,14 @@ pub fn update(model: &mut Model, msg: GameAction) -> Option<GameAction> {
         GameAction::ZoomMiddle => game.zoom = Zoom::Middle,
         GameAction::ZoomFar => game.zoom = Zoom::Far,
         GameAction::None => {}
-        GameAction::Win => {}
+        GameAction::Win => {
+            model.increment_level();
+
+            // Update latest level unlocked if you just did that, anyway
+            if model.world_index > model.save_file.saves[0].level {
+                model.save_file.saves[0].level = model.world_index;
+            }
+        }
     };
     None
 }

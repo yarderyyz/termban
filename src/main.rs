@@ -38,7 +38,6 @@ fn main() -> io::Result<()> {
 
     let ban_filename = "./resources/levels/micro2.ban";
 
-    // TODO: actually handle errors here
     let worlds = read_file(ban_filename)
         .map(|contents| soko_loader::parse_sokoban_worlds(&contents).unwrap())
         .unwrap_or_default();
@@ -47,20 +46,21 @@ fn main() -> io::Result<()> {
         .map(|contents| toml::from_str(&contents).unwrap())
         .ok();
 
-    let mut world_index = 0;
-    let save_file = match saves {
+    let (save_file, world_index) = match saves {
         Some(saves) => {
-            world_index = saves.saves[0].level;
-            saves
+            let world_index = saves.saves[0].level;
+            (saves, world_index)
         }
-        None => types::SaveFile::new(),
+        None => (types::SaveFile::new(), 0),
     };
+
     let soko_game = types::SokoModel {
         current_state: worlds[world_index].clone(),
         zoom: types::Zoom::Middle,
         history: Vec::new(),
         debug: Vec::new(),
     };
+
     let mut model = types::Model {
         running_state: types::RunningState::Menu,
         soko_game,
@@ -80,8 +80,8 @@ fn main() -> io::Result<()> {
                 let mut current_msg = menu::handle_event(&model)?;
 
                 // Process updates as long as they return a non-None message
-                while current_msg.is_some() {
-                    current_msg = menu::update(&mut model, current_msg.unwrap());
+                while let Some(message) = current_msg {
+                    current_msg = menu::update(&mut model, message);
                 }
             }
             types::RunningState::Game => {
@@ -90,23 +90,15 @@ fn main() -> io::Result<()> {
                 // Handle events and map to a Message
                 let mut current_msg = soko_game::handle_event(&mut model)?;
 
-                // When you win a level, move to the next level!
-                // XXX: This has to happen before the while loop below. Why?
-                if let Some(types::GameAction::Win) = current_msg {
-                    // When we win a game we then (try to) go to the next level in the list!
-                    model.increment_level();
-
-                    // Update latest level unlocked if you just did that, anyway
-                    if model.world_index > model.save_file.saves[0].level {
-                        model.save_file.saves[0].level = model.world_index;
-                    }
-                    save_toml_file(save_filename, &model.save_file)?;
-                    continue;
-                }
-
                 // Process updates as long as they return a non-None message
-                while current_msg.is_some() {
-                    current_msg = soko_game::update(&mut model, current_msg.unwrap());
+                while let Some(message) = current_msg {
+                    current_msg = soko_game::update(&mut model, message.clone());
+
+                    // after updating the model if the last message was a Win action we'll write
+                    // the save file
+                    if matches!(message, types::GameAction::Win) {
+                        save_toml_file(save_filename, &model.save_file)?;
+                    }
                 }
             }
             types::RunningState::LevelSelect => {
@@ -115,9 +107,8 @@ fn main() -> io::Result<()> {
                 let mut current_msg = level_select::handle_event(&model)?;
 
                 // Process updates as long as they return a non-None message
-                while current_msg.is_some() {
-                    current_msg =
-                        level_select::update(&mut model, current_msg.unwrap());
+                while let Some(message) = current_msg {
+                    current_msg = level_select::update(&mut model, message);
                 }
             }
         }
