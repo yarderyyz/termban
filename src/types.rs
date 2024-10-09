@@ -152,32 +152,22 @@ impl Coordinate {
 }
 
 #[derive(Debug, Clone)]
-pub struct Player {
-    pub position: Coordinate,
-}
-
-#[derive(Debug, Clone)]
-pub struct SokoBox {
-    pub position: Coordinate,
-}
-
-#[derive(Debug, Clone)]
 pub enum Entity {
-    Player(Player),
-    SokoBox(SokoBox),
+    Player { position: Coordinate },
+    SokoBox { position: Coordinate },
 }
 
 impl Entity {
     pub fn get_position(&self) -> Coordinate {
         match self {
-            Entity::Player(player) => player.position.clone(),
-            Entity::SokoBox(soko_box) => soko_box.position.clone(),
+            Entity::Player { position } => position.clone(),
+            Entity::SokoBox { position } => position.clone(),
         }
     }
     pub fn color(&self) -> Color {
         match self {
-            Entity::Player(_) => get_color(TolColor::PurRed),
-            Entity::SokoBox(_) => get_color(TolColor::BriBlue),
+            Entity::Player { .. } => get_color(TolColor::PurRed),
+            Entity::SokoBox { .. } => get_color(TolColor::BriBlue),
         }
     }
 }
@@ -210,17 +200,15 @@ impl World {
 
     // If every soko_box entity share a coordinate space with a goal tile, that means you win!
     pub fn is_sokoban_solved(&self) -> bool {
-        self.entities
-            .iter()
-            .filter(|ent| matches!(ent, Entity::SokoBox(_)))
-            .all(|ent| {
-                if let Entity::SokoBox(soko_box) = ent {
-                    let tile = &self.board[[soko_box.position.y, soko_box.position.x]];
-                    matches!(tile, Tile::Goal)
-                } else {
-                    false // This line should never be reached due to the filter
-                }
-            })
+        self.entities.iter().all(|ent| {
+            if let Entity::SokoBox { position } = ent {
+                let tile = &self.board[[position.y, position.x]];
+                matches!(tile, Tile::Goal)
+            } else {
+                // Other entities don't count towards the win condition so return true
+                true
+            }
+        })
     }
 }
 

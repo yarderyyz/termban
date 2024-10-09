@@ -131,8 +131,8 @@ fn handle_move(prev_level: &World, direction: Direction) -> Option<World> {
     // if the player is trying to move into a wall we'll do nothing otherwise we'll
     // set the move
     for (index, entity) in level.entities.iter().enumerate() {
-        if let Entity::Player(player) = entity {
-            let new_position = get_new_position(player.position.clone(), &direction);
+        if let Entity::Player { position } = entity {
+            let new_position = get_new_position(position, &direction);
 
             match level.board[[new_position.y, new_position.x]] {
                 Tile::Wall => player_move = None,
@@ -145,12 +145,11 @@ fn handle_move(prev_level: &World, direction: Direction) -> Option<World> {
     let mut soko_box_move = None;
     if let Some((_, player_position)) = player_move.clone() {
         for (index, entity) in level.entities.iter().enumerate() {
-            if let Entity::SokoBox(soko_box) = entity {
+            if let Entity::SokoBox { position } = entity {
                 // if there is a soko_box where the player wants to move see if we can
                 // push it.
-                if soko_box.position == player_position.clone() {
-                    let new_position =
-                        get_new_position(soko_box.position.clone(), &direction);
+                if *position == player_position {
+                    let new_position = get_new_position(position, &direction);
 
                     if level.is_tile_occupied(&new_position) {
                         // if the tile we are trying to move too is occupied both moves are
@@ -168,22 +167,22 @@ fn handle_move(prev_level: &World, direction: Direction) -> Option<World> {
 
     // resolve the movement
     if let Some((index, new_position)) = player_move {
-        if let Entity::Player(ref mut player) = &mut level.entities[index] {
-            player.position = new_position.clone();
+        if let Entity::Player { position } = &mut level.entities[index] {
+            *position = new_position.clone();
         }
     } else {
         return None;
     }
     if let Some((index, new_position)) = soko_box_move {
-        if let Entity::SokoBox(ref mut soko_box) = &mut level.entities[index] {
-            soko_box.position = new_position.clone();
+        if let Entity::SokoBox { position } = &mut level.entities[index] {
+            *position = new_position.clone();
         }
     }
 
     Some(level)
 }
 
-fn get_new_position(position: Coordinate, direction: &Direction) -> Coordinate {
+fn get_new_position(position: &Coordinate, direction: &Direction) -> Coordinate {
     match direction {
         Direction::Up => Coordinate {
             x: position.x,

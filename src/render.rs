@@ -86,7 +86,7 @@ fn render_sprites(item: &RenderItem, glyph_buffer: GlyphCells) -> GlyphCells {
         RenderItem::Entity(entity) => {
             let pos = entity.get_position();
             match entity {
-                Entity::Player(_) => {
+                Entity::Player { .. } => {
                     let mut glyph_buffer = glyph_buffer.clone();
                     let player_sprite = get_player_sprite_4();
                     for (yi, row) in player_sprite.chars.rows().into_iter().enumerate()
