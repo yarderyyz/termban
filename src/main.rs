@@ -54,12 +54,7 @@ fn main() -> io::Result<()> {
         None => (types::SaveFile::new(), 0),
     };
 
-    let soko_game = types::SokoModel {
-        current_state: worlds[world_index].clone(),
-        zoom: types::Zoom::Middle,
-        history: Vec::new(),
-        debug: Vec::new(),
-    };
+    let soko_game = types::SokoModel::from(worlds[world_index].clone());
 
     let mut model = types::Model {
         running_state: types::RunningState::Menu,

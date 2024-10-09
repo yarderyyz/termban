@@ -38,8 +38,8 @@ pub struct Model {
 impl Model {
     pub fn change_level(self: &mut Model, level_index: usize) {
         self.world_index = level_index;
-        self.soko_game.current_state = self.worlds[self.world_index].clone();
-        self.reload_world();
+        let world = self.worlds[self.world_index].clone();
+        self.soko_game = SokoModel::from(world)
     }
 
     pub fn increment_level(self: &mut Model) {
@@ -64,11 +64,6 @@ impl Model {
             self.soko_game.current_state = prev_world_state.clone();
         }
         self.erase_history();
-    }
-    /// Loading a new area erases your history and refreshes the window
-    pub fn reload_world(self: &mut Model) {
-        self.erase_history();
-        self.refresh_window();
     }
 }
 
@@ -182,8 +177,8 @@ impl World {
         match self.board[[coord.y, coord.x]] {
             Tile::Wall => true,
             _ => {
-                for ent in self.entities.iter() {
-                    if ent.get_position() == *coord {
+                for entity in self.entities.iter() {
+                    if entity.get_position() == *coord {
                         return true;
                     }
                 }
@@ -194,8 +189,8 @@ impl World {
 
     // If every soko_box entity share a coordinate space with a goal tile, that means you win!
     pub fn is_sokoban_solved(&self) -> bool {
-        self.entities.iter().all(|ent| {
-            if let Entity::SokoBox { position } = ent {
+        self.entities.iter().all(|entity| {
+            if let Entity::SokoBox { position } = entity {
                 let tile = &self.board[[position.y, position.x]];
                 matches!(tile, Tile::Goal)
             } else {
@@ -223,6 +218,17 @@ pub struct SokoModel {
     pub zoom: Zoom,
     pub history: Vec<World>,
     pub debug: Vec<String>,
+}
+
+impl SokoModel {
+    pub fn from(world: World) -> Self {
+        Self {
+            current_state: world,
+            zoom: Zoom::Middle,
+            history: Vec::new(),
+            debug: Vec::new(),
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
